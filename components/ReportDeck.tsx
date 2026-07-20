@@ -14,7 +14,7 @@ const STATUS_META: Record<Report["status"], { label: string; cls: string }> = {
 
 /** Main-page field of report cards — YouTube-style, renamable, with a progress bar. */
 export function ReportDeck() {
-  const { reports, sources, events, tick, openReport, createReport } = useStore();
+  const { reports, sources, events, tick, openReport, createReport, renameReport } = useStore();
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
 
@@ -87,6 +87,8 @@ export function ReportDeck() {
   );
 
   function ReportCard({ rep, delay }: { rep: Report; delay: string }) {
+    const [renaming, setRenaming] = useState(false);
+    const [draft, setDraft] = useState("");
     const repSources = sources.filter((s) => s.reportId === rep.id);
     const repEvents = events.filter((e) => e.reportId === rep.id);
     const submitted = repSources.filter((s) => s.status === "submitted").length;
@@ -102,10 +104,18 @@ export function ReportDeck() {
       { label: "Sign-off", done: Boolean(rep.signedBy), active: (rep.status === "generated" || rep.status === "generated_partial") && !rep.signedBy },
     ];
 
+    function commitRename() {
+      if (draft.trim()) renameReport(rep.id, draft);
+      setRenaming(false);
+    }
+
     return (
-      <button
-        onClick={() => openReport(rep.id)}
-        className={`glass rounded-2xl overflow-hidden text-left group hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 ${delay} fade-up`}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => !renaming && openReport(rep.id)}
+        onKeyDown={(e) => e.key === "Enter" && !renaming && openReport(rep.id)}
+        className={`glass rounded-2xl overflow-hidden text-left group cursor-pointer hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 ${delay} fade-up`}
       >
         {/* thumbnail: mini stage strip */}
         <div className="relative h-32 bg-gradient-to-br from-indigo-50/80 via-rose-50/60 to-amber-50/60 px-5 flex flex-col justify-center gap-3">
@@ -148,9 +158,32 @@ export function ReportDeck() {
 
         {/* title + meta */}
         <div className="px-5 py-4">
-          <h3 className="text-[13.5px] font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-[#b7245c] transition-colors">
-            {rep.name}
-          </h3>
+          {renaming ? (
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitRename();
+                if (e.key === "Escape") setRenaming(false);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full text-[13.5px] font-semibold bg-white/80 border border-rose-200 rounded px-1.5 py-0.5 focus:outline-none"
+            />
+          ) : (
+            <h3
+              className="text-[13.5px] font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-[#b7245c] transition-colors"
+              title={`${rep.name} — double-click to rename`}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                setRenaming(true);
+                setDraft(rep.name);
+              }}
+            >
+              {rep.name}
+            </h3>
+          )}
           <p className="text-[11px] text-slate-400 mt-1.5">
             <span className={`font-semibold ${meta.cls}`}>{meta.label}</span>
             {" · "}
@@ -176,7 +209,7 @@ export function ReportDeck() {
             {lastEvent ? `Day ${lastEvent.timestamp}: ${lastEvent.message}` : `Scheduled — advance the day to start collection.`}
           </p>
         </div>
-      </button>
+      </div>
     );
   }
 }

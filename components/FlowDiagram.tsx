@@ -186,7 +186,7 @@ export function FlowDiagram({ reportId }: { reportId: string }) {
                 className={`absolute rounded-2xl border bg-white/85 backdrop-blur p-4 shadow-xl cursor-grab active:cursor-grabbing transition-shadow ${node.border} ${node.glow} ${
                   lit ? "ring-4 ring-rose-300/60 scale-[1.03]" : selected === node.key ? "ring-4 ring-indigo-300/70" : ""
                 }`}
-                style={{ left: pos.x, top: pos.y, width: NODE_W, height: NODE_H, transition: dragRef.current?.key === node.key ? "none" : "transform 0.2s" }}
+                style={{ left: pos.x, top: pos.y, width: NODE_W, height: NODE_H, transition: "transform 0.2s" }}
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className={`w-7 h-7 rounded-lg border flex items-center justify-center text-[13px] ${node.iconBg}`}>

@@ -46,23 +46,20 @@ export function ActivityFeed({ reportId }: { reportId: string }) {
     );
   }
 
-  let lastDay = -1;
-
   return (
     <div className="glass rounded-2xl px-6 py-5">
       <div className="relative">
         <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gradient-to-b from-rose-300 via-amber-200/70 to-transparent" />
 
         <div className="flex flex-col">
-          {ordered.map((evt) => {
+          {ordered.map((evt, idx) => {
             const style = ACTOR_STYLE[evt.actor];
             const highlight =
               evt.kind === "human_alert" ||
               evt.kind === "validation_flag" ||
               evt.kind === "reconciliation_flag" ||
               evt.kind === "report_generated";
-            const showDay = evt.timestamp !== lastDay;
-            lastDay = evt.timestamp;
+            const showDay = idx === 0 || ordered[idx - 1].timestamp !== evt.timestamp;
 
             return (
               <div key={evt.id}>

@@ -93,6 +93,17 @@ export function QueryHub() {
   );
 }
 
+/** Match a report by meaningful words from its name appearing in the question. */
+function findReportByName(lower: string, reports: Report[]): Report | undefined {
+  return reports.find((r) =>
+    r.name
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 2 && !["report", "the", "fy26", "fy27", "arepl", "annual", "data"].includes(w))
+      .some((w) => lower.includes(w))
+  );
+}
+
 function answerQuery(q: string, reports: Report[], sources: DataSource[], tick: number): string {
   const lower = q.toLowerCase();
 
@@ -113,8 +124,9 @@ function answerQuery(q: string, reports: Report[], sources: DataSource[], tick: 
     return open.map(({ f, s }) => `• [${f.type}] ${s.name} · ${f.field.replace(/_/g, " ")}: ${f.detail}`).join("\n");
   }
 
-  if (lower.includes("block") || lower.includes("brsr")) {
-    const rep = reports.find((r) => r.name.toLowerCase().includes("brsr report")) ?? reports[0];
+  const named = findReportByName(lower, reports);
+  if (lower.includes("block") || named) {
+    const rep = named ?? reports[0];
     const repSources = sources.filter((s) => s.reportId === rep.id);
     if (rep.status === "generated" || rep.status === "generated_partial")
       return `"${rep.name}" was generated on Day ${rep.generatedAtTick}${rep.status === "generated_partial" ? ` with ${rep.gaps?.length} gap(s) marked` : ""}.`;

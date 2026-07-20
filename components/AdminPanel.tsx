@@ -13,11 +13,11 @@ const PANELS: { key: Panel; icon: string; label: string; desc: string }[] = [
 ];
 
 const PERSONNEL = [
-  { email: "sarah.jenkins@globalmfg.co", role: "VP Operations / Auditor", scope: "Global (all departments)" },
-  { email: "r.menon@globalmfg.co", role: "Sales Lead", scope: "Sales · Plant A" },
-  { email: "s.bhatt@globalmfg.co", role: "Warehouse Manager", scope: "Warehouse · Plant A" },
-  { email: "m.sharma@globalmfg.co", role: "Sustainability Officer", scope: "ESG disclosures" },
-  { email: "v.krishnan@globalmfg.co", role: "Facilities Lead", scope: "Facilities · Energy data" },
+  { email: "yash.b@arepl.co", role: "VP, Global Compliance & Ops / Reviewer", scope: "Global (all reports)" },
+  { email: "mansi.s@arepl.co", role: "Group Sustainability Lead", scope: "BRSR · Sustainability Report" },
+  { email: "hima.bindu@arepl.co", role: "HR SPOC", scope: "P3 KPIs · payroll evidence" },
+  { email: "palla.satish@arepl.co", role: "HSE SPOC", scope: "Safety KPIs · incident register" },
+  { email: "avinash.p@arepl.co", role: "Finance SPOC", scope: "Turnover · CSR spend ledger" },
 ];
 
 const INITIAL_INTEGRATIONS = [
@@ -98,7 +98,7 @@ function Integrations() {
         ))}
       </div>
       <p className="text-[10.5px] text-slate-400 mt-4">
-        Demo note: toggles are local to this session. In production these gate the workflow engine's channel nodes.
+        Demo note: toggles are local to this session. In production these gate the workflow engine&rsquo;s channel nodes.
       </p>
     </div>
   );

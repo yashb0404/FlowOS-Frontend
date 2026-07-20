@@ -165,7 +165,7 @@ export function Dashboard({ reportId }: { reportId: string }) {
 
       <p className="text-[11.5px] text-slate-400 px-1">
         Ladder per source: email #1 on due date → #2 at +1 → #3 at +2 → <span className="text-rose-500 font-medium">human alert</span> at
-        +3. Submitted data flows through extraction → validation ("N of N fields") → reconciliation vs the ERP snapshot; any
+        +3. Submitted data flows through extraction → validation (&ldquo;N of N fields&rdquo;) → reconciliation vs the ERP snapshot; any
         flag routes to the <span className="text-slate-600 font-medium">Review</span> tab.
       </p>
     </div>
