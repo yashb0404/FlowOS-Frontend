@@ -14,7 +14,7 @@ export const TOUR_STEPS: TourStep[] = [
     tab: "home",
     title: "The report deck",
     desc: "Every card is an isolated report workspace with its own pipeline. The bar at the bottom of each card shows how far that report has progressed toward sign-off.",
-    action: "Click Advance Day (or Auto-play) a few times and watch each card's progress bar fill at its own pace. Then open the Plant A card.",
+    action: "Click Advance Day (or Auto-play) a few times and watch each card's progress bar fill at its own pace. Then open the BRSR Report card.",
   },
   {
     tab: "dashboard",
@@ -50,7 +50,7 @@ export const TOUR_STEPS: TourStep[] = [
     tab: "query",
     title: "Ask your operations data",
     desc: "Everything collected becomes queryable knowledge — overdue sources, open flags, what's blocking which report.",
-    action: "Click the 'What is blocking the Plant A report?' suggestion and watch the grounded answer.",
+    action: "Click the 'What is blocking the BRSR report?' suggestion and watch the grounded answer.",
   },
 ];
 

@@ -101,6 +101,16 @@ export function Dashboard({ reportId }: { reportId: string }) {
                 {rep.project} · {rep.frequency === "one-time" ? "one-time" : `recurring ${rep.frequency}`} ·{" "}
                 {repSources.length} required data sources
               </p>
+              {rep.regulation && (
+                <p className="text-[10.5px] text-slate-500 mt-1">
+                  ⚖ <span className="font-medium">{rep.regulation}</span>
+                  {rep.assurance && rep.assurance !== "none" && (
+                    <span className="ml-2 px-2 py-0.5 rounded-full border bg-indigo-50 border-indigo-200 text-[#3d5a99] font-semibold uppercase text-[9px]">
+                      {rep.assurance} assurance
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-3">
               {openFlags > 0 && (
@@ -209,7 +219,7 @@ function SourceRow({ src, tick }: { src: DataSource; tick: number }) {
           </span>
           <div>
             <div className="font-medium text-slate-800 text-[13px]">{src.name}</div>
-            <div className="text-[10.5px] text-slate-400">{src.label}</div>
+            <div className="text-[10.5px] text-slate-400">{src.principle ?? src.label}</div>
           </div>
         </div>
       </td>

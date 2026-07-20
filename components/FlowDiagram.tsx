@@ -335,13 +335,25 @@ function AgentSettings({
             <SettingLabel text={`Required sources (${sources.length}) — where each collects from`} />
             <div className="mt-2 flex flex-col gap-1.5">
               {sources.map((s) => (
-                <div key={s.id} className="glass-soft rounded-lg px-3 py-2 flex items-center gap-2.5 text-[11.5px]">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${SRC_DOT[s.status]}`} />
-                  <span className="font-medium text-slate-700 truncate">{s.name}</span>
-                  <span className="text-slate-400 truncate">{s.owner} · {s.department} · due Day {s.dueTick}</span>
-                  <span className="ml-auto text-slate-500 whitespace-nowrap">
-                    {s.status === "submitted" ? `via ${intakeOf(s)}` : "awaiting"}
-                  </span>
+                <div key={s.id} className="glass-soft rounded-lg px-3 py-2 text-[11.5px]">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${SRC_DOT[s.status]}`} />
+                    <span className="font-medium text-slate-700 truncate">{s.name}</span>
+                    <span className="text-slate-400 truncate">{s.owner} · {s.department} · due Day {s.dueTick}</span>
+                    <span className="ml-auto text-slate-500 whitespace-nowrap">
+                      {s.status === "submitted" ? `via ${intakeOf(s)}` : "awaiting"}
+                    </span>
+                  </div>
+                  {(s.principle || s.evidence) && (
+                    <div className="flex flex-wrap items-center gap-1 mt-1.5 pl-4">
+                      {s.principle && (
+                        <span className="px-1.5 py-0.5 rounded border bg-indigo-50 border-indigo-200 text-[#3d5a99] text-[9.5px] font-medium">{s.principle}</span>
+                      )}
+                      {s.evidence?.map((ev) => (
+                        <span key={ev} className="px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-500 text-[9.5px]">📎 {ev}</span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

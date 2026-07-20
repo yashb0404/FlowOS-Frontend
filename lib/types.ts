@@ -41,6 +41,10 @@ export interface DataSource {
   expectedFields: string[];
   submittedFields?: Record<string, number | string>;
   flags: Flag[];
+  /** Backup documents the SPOC must attach as proof (BRSR assurance requirement). */
+  evidence?: string[];
+  /** BRSR principle / framework clause this source feeds, e.g. "P6 — Environment". */
+  principle?: string;
 }
 
 export type ReportStatus = "collecting" | "blocked" | "generated" | "generated_partial";
@@ -53,12 +57,18 @@ export interface ReportSection {
   note?: string;
 }
 
+export type AssuranceLevel = "none" | "internal" | "limited" | "reasonable";
+
 export interface Report {
   id: string;
   name: string;
   project: string;
   frequency: Frequency;
   status: ReportStatus;
+  /** Governing regulation / framework, e.g. "SEBI LODR Reg. 34(2)(f)". */
+  regulation?: string;
+  /** Assurance level the data must survive. */
+  assurance?: AssuranceLevel;
   generatedAtTick?: number;
   sections?: ReportSection[];
   gaps?: string[];

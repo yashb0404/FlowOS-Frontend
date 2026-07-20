@@ -7,7 +7,7 @@ import { DataSource, Report } from "@/lib/types";
 const SUGGESTIONS = [
   "Which data sources are overdue?",
   "Show all open flags",
-  "What is blocking the Plant A report?",
+  "What is blocking the BRSR report?",
   "Summarize report status",
 ];
 
@@ -113,8 +113,8 @@ function answerQuery(q: string, reports: Report[], sources: DataSource[], tick: 
     return open.map(({ f, s }) => `• [${f.type}] ${s.name} · ${f.field.replace(/_/g, " ")}: ${f.detail}`).join("\n");
   }
 
-  if (lower.includes("block") || lower.includes("plant a")) {
-    const rep = reports.find((r) => r.name.toLowerCase().includes("plant a")) ?? reports[0];
+  if (lower.includes("block") || lower.includes("brsr")) {
+    const rep = reports.find((r) => r.name.toLowerCase().includes("brsr report")) ?? reports[0];
     const repSources = sources.filter((s) => s.reportId === rep.id);
     if (rep.status === "generated" || rep.status === "generated_partial")
       return `"${rep.name}" was generated on Day ${rep.generatedAtTick}${rep.status === "generated_partial" ? ` with ${rep.gaps?.length} gap(s) marked` : ""}.`;

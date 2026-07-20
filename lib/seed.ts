@@ -1,360 +1,152 @@
 import { DataSource, Report } from "./types";
 
+/**
+ * Seed data modeled on the real AREPL (Galla Foods) FY26 BRSR & sustainability
+ * reporting cycle — SPOCs, KPIs, evidence and assurance requirements taken from
+ * the client's data-collation process.
+ */
 export const seedReports: Report[] = [
   {
     id: "rep-1",
-    name: "Monthly Operations Report — Plant A · July",
-    project: "Plant A Operations",
-    frequency: "monthly",
+    name: "BRSR Report — AREPL FY26",
+    project: "Annual Report Annexure · 9 NGRBC Principles",
+    frequency: "one-time",
     status: "collecting",
+    regulation: "SEBI LODR Reg. 34(2)(f) · BRSR format per Master Circular",
+    assurance: "reasonable",
   },
   {
     id: "rep-2",
-    name: "Q2 Carbon Emissions & Energy Report",
-    project: "Corporate Sustainability",
+    name: "Sustainability Report — AREPL FY26",
+    project: "GRI-indexed · People, Planet, Principles",
     frequency: "one-time",
     status: "collecting",
+    regulation: "GRI Standards 2021 (voluntary)",
+    assurance: "internal",
   },
   {
     id: "rep-3",
-    name: "Weekly Logistics Snapshot — North Region",
-    project: "Supply Chain",
-    frequency: "weekly",
+    name: "BRSR Core — Assurance Evidence Pack FY26",
+    project: "Third-party reasonable assurance · sample >90%",
+    frequency: "one-time",
     status: "collecting",
+    regulation: "BRSR Core · SEBI Industry Standards Note",
+    assurance: "reasonable",
   },
   {
     id: "rep-4",
-    name: "Vendor Compliance Audit — FY26",
-    project: "Procurement Governance",
-    frequency: "quarterly",
+    name: "CSR Annual Report — AREPL FY26",
+    project: "Board CSR Committee · Schedule VII activities",
+    frequency: "one-time",
     status: "collecting",
+    regulation: "Companies Act 2013 §135 · Schedule VII",
+    assurance: "internal",
   },
   {
     id: "rep-5",
-    name: "Monthly Finance Pack — HQ · July",
-    project: "Corporate Finance",
-    frequency: "monthly",
+    name: "ESG Data Book — Q1 FY27",
+    project: "Quarterly internal ESG tracker",
+    frequency: "quarterly",
     status: "collecting",
-  },
-  {
-    id: "rep-6",
-    name: "BRSR Report — AREPL FY26",
-    project: "SEBI BRSR · Annual Report Annexure",
-    frequency: "one-time",
-    status: "collecting",
+    regulation: "Internal ESG policy (group sustainability)",
+    assurance: "none",
   },
 ];
 
 export const seedSources: DataSource[] = [
-  // ── Report 1: four data sources, three problem paths ──
-  {
-    id: "ds-1",
-    reportId: "rep-1",
-    label: "Data 1",
-    name: "Sales Summary",
-    department: "Sales",
-    owner: "R. Menon",
-    dueTick: 1,
-    submitAtTick: 3, // arrives after two email follow-ups
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["revenue_lakhs", "units_sold"],
-    flags: [],
-  },
-  {
-    id: "ds-2",
-    reportId: "rep-1",
-    label: "Data 2",
-    name: "Production Output",
-    department: "Production",
-    owner: "D. Rao",
-    dueTick: 1,
-    submitAtTick: 1, // on time, clean — the happy path
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["output_units", "downtime_hours"],
-    flags: [],
-  },
-  {
-    id: "ds-3",
-    reportId: "rep-1",
-    label: "Data 3",
-    name: "Inventory Position",
-    department: "Warehouse",
-    owner: "S. Bhatt",
-    dueTick: 2,
-    submitAtTick: 4, // late AND incomplete → validation flag
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["closing_stock", "variance_pct", "damaged_units"],
-    flags: [],
-  },
-  {
-    id: "ds-4",
-    reportId: "rep-1",
-    label: "Data 4",
-    name: "Distributor Sales Data",
-    department: "External Vendor",
-    owner: "Zenith Distributors",
-    dueTick: 1,
-    submitAtTick: null, // never submits → full ladder → human alert
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["distributor_sales_lakhs"],
-    flags: [],
-  },
+  // ── Report 1: BRSR — the 10 real AREPL SPOCs from the client email ──
+  { id: "ds-1", reportId: "rep-1", label: "Data 1", name: "Company Secretary KPIs", department: "Company Secretary", owner: "Ravi Kumar P", dueTick: 2, submitAtTick: 2, status: "pending", remindersSent: 0, expectedFields: ["board_meetings_held", "independent_directors_pct"], flags: [], principle: "Section A/B — Governance", evidence: ["Board minutes", "Committee composition"] },
+  { id: "ds-2", reportId: "rep-1", label: "Data 2", name: "Finance KPIs", department: "Finance", owner: "Avinash P", dueTick: 2, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["turnover_cr", "csr_spend_pct"], flags: [], principle: "P8 — Inclusive growth", evidence: ["Audited P&L", "CSR ledger extract"] },
+  { id: "ds-3", reportId: "rep-1", label: "Data 3", name: "Sustainability KPIs", department: "Sustainability", owner: "Mansi S", dueTick: 2, submitAtTick: 2, status: "pending", remindersSent: 0, expectedFields: ["ghg_scope1_tco2e", "ghg_scope2_tco2e"], flags: [], principle: "P6 — Environment", evidence: ["Emission calc workbook", "Fuel purchase invoices"] },
+  { id: "ds-4", reportId: "rep-1", label: "Data 4", name: "HR KPIs", department: "HR", owner: "Hima Bindu K", dueTick: 3, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["total_employees", "training_coverage_pct"], flags: [], principle: "P3 — Employee well-being", evidence: ["HRMS headcount export", "Training register"] },
+  { id: "ds-5", reportId: "rep-1", label: "Data 5", name: "CSR KPIs", department: "CSR", owner: "Bala Subrahmanyam B", dueTick: 3, submitAtTick: null, status: "pending", remindersSent: 0, expectedFields: ["csr_projects", "beneficiaries"], flags: [], principle: "P8 — Inclusive growth", evidence: ["Project completion certificates"] },
+  { id: "ds-6", reportId: "rep-1", label: "Data 6", name: "Marketing KPIs", department: "Marketing", owner: "Pavan Kumar D", dueTick: 3, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["consumer_complaints", "complaints_resolved_pct"], flags: [], principle: "P9 — Consumer value", evidence: ["Complaint register", "CRM export"] },
+  { id: "ds-7", reportId: "rep-1", label: "Data 7", name: "Procurement KPIs", department: "Procurement", owner: "Prasanna D", dueTick: 4, submitAtTick: 5, status: "pending", remindersSent: 0, expectedFields: ["msme_sourcing_pct", "local_sourcing_pct"], flags: [], principle: "P8 — Inclusive growth", evidence: ["Vendor master", "PO summary"] },
+  { id: "ds-8", reportId: "rep-1", label: "Data 8", name: "HSE KPIs", department: "HSE", owner: "Palla Satish", dueTick: 4, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["ltifr", "safety_incidents"], flags: [], principle: "P3 — Employee well-being", evidence: ["Incident register", "Safety audit report"] },
+  { id: "ds-9", reportId: "rep-1", label: "Data 9", name: "Energy KPIs", department: "Energy", owner: "Kondala Santhoshkumar", dueTick: 4, submitAtTick: 5, status: "pending", remindersSent: 0, expectedFields: ["energy_consumed_gj", "renewable_energy_pct"], flags: [], principle: "P6 — Environment", evidence: ["Utility bills", "Meter logs"] },
+  { id: "ds-10", reportId: "rep-1", label: "Data 10", name: "IT KPIs", department: "IT", owner: "Ramesh Kumar O", dueTick: 5, submitAtTick: 5, status: "pending", remindersSent: 0, expectedFields: ["data_breaches", "privacy_complaints"], flags: [], principle: "P9 — Consumer value", evidence: ["Security incident log"] },
 
-  // ── Report 2: two clean sources — shows the gate opening automatically ──
-  {
-    id: "ds-5",
-    reportId: "rep-2",
-    label: "Data 1",
-    name: "Emissions Data",
-    department: "Sustainability",
-    owner: "M. Sharma",
-    dueTick: 2,
-    submitAtTick: 2,
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["emissions_tco2e", "renewable_pct"],
-    flags: [],
-  },
-  {
-    id: "ds-6",
-    reportId: "rep-2",
-    label: "Data 2",
-    name: "Energy Usage",
-    department: "Facilities",
-    owner: "V. Krishnan",
-    dueTick: 3,
-    submitAtTick: 4,
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["grid_kwh", "solar_kwh"],
-    flags: [],
-  },
+  // ── Report 2: Sustainability Report (GRI) — content packs from the same SPOCs ──
+  { id: "ds-11", reportId: "rep-2", label: "Data 1", name: "Materiality Assessment", department: "Sustainability", owner: "Mansi S", dueTick: 1, submitAtTick: 1, status: "pending", remindersSent: 0, expectedFields: ["material_topics", "stakeholders_engaged"], flags: [], principle: "GRI 3 — Material topics", evidence: ["Stakeholder survey results"] },
+  { id: "ds-12", reportId: "rep-2", label: "Data 2", name: "Environmental Metrics Pack", department: "Energy", owner: "Kondala Santhoshkumar", dueTick: 2, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["water_withdrawal_kl", "waste_recycled_pct"], flags: [], principle: "GRI 303/306 — Water & waste", evidence: ["Water meter logs", "Waste manifest"] },
+  { id: "ds-13", reportId: "rep-2", label: "Data 3", name: "Social Metrics Pack", department: "HR", owner: "Hima Bindu K", dueTick: 2, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["women_workforce_pct", "grievances_resolved"], flags: [], principle: "GRI 401/406 — People", evidence: ["Diversity report", "Grievance register"] },
+  { id: "ds-14", reportId: "rep-2", label: "Data 4", name: "Governance Disclosures", department: "Company Secretary", owner: "Ravi Kumar P", dueTick: 3, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["ethics_trainings", "policy_updates"], flags: [], principle: "GRI 2 — Governance", evidence: ["Policy register"] },
 
-  // ── Report 3: logistics — one clean, one recon mismatch, one late & incomplete ──
-  {
-    id: "ds-7",
-    reportId: "rep-3",
-    label: "Data 1",
-    name: "Fleet Utilization",
-    department: "Transport",
-    owner: "A. Fernandes",
-    dueTick: 1,
-    submitAtTick: 1, // on time, clean
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["trips_completed", "utilization_pct"],
-    flags: [],
-  },
-  {
-    id: "ds-8",
-    reportId: "rep-3",
-    label: "Data 2",
-    name: "Warehouse Dispatch Log",
-    department: "Warehouse",
-    owner: "K. Iyer",
-    dueTick: 2,
-    submitAtTick: 3, // one follow-up, then a recon mismatch on shipped units
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["units_shipped", "pending_orders"],
-    flags: [],
-  },
-  {
-    id: "ds-9",
-    reportId: "rep-3",
-    label: "Data 3",
-    name: "Carrier Invoices",
-    department: "External Vendor",
-    owner: "BlueDart Logistics",
-    dueTick: 2,
-    submitAtTick: 5, // late AND missing a field → validation flag
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["freight_cost_lakhs", "fuel_surcharge_pct", "damage_claims"],
-    flags: [],
-  },
+  // ── Report 3: BRSR Core assurance evidence — what the external assurer samples ──
+  { id: "ds-15", reportId: "rep-3", label: "Data 1", name: "Energy & Emissions Evidence", department: "Energy", owner: "Kondala Santhoshkumar", dueTick: 2, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["utility_invoices_count", "meter_log_months"], flags: [], principle: "BRSR Core — Attr. 1 (GHG)", evidence: ["12× APSPDCL invoices", "DG fuel receipts"] },
+  { id: "ds-16", reportId: "rep-3", label: "Data 2", name: "Safety Records Evidence", department: "HSE", owner: "Palla Satish", dueTick: 2, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["incident_reports_count", "manhours_lakhs"], flags: [], principle: "BRSR Core — Attr. 4 (Safety)", evidence: ["Form 27 filings", "Incident close-outs"] },
+  { id: "ds-17", reportId: "rep-3", label: "Data 3", name: "Payroll & Benefits Evidence", department: "HR", owner: "Hima Bindu K", dueTick: 3, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["pf_coverage_pct", "wage_records_months"], flags: [], principle: "BRSR Core — Attr. 3 (Wages)", evidence: ["PF ECR challans", "Payroll extract"] },
+  { id: "ds-18", reportId: "rep-3", label: "Data 4", name: "Utility Invoices — APSPDCL", department: "External Vendor", owner: "APSPDCL (discom)", dueTick: 2, submitAtTick: null, status: "pending", remindersSent: 0, expectedFields: ["duplicate_invoice_set"], flags: [], principle: "BRSR Core — Attr. 1 (GHG)", evidence: ["Certified duplicate bills"] },
 
-  // ── Report 4: vendor audit — slow burn, one vendor never responds ──
-  {
-    id: "ds-10",
-    reportId: "rep-4",
-    label: "Data 1",
-    name: "Vendor Certifications",
-    department: "Procurement",
-    owner: "N. Kulkarni",
-    dueTick: 2,
-    submitAtTick: 2, // on time, clean
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["certified_vendors", "expired_certs"],
-    flags: [],
-  },
-  {
-    id: "ds-11",
-    reportId: "rep-4",
-    label: "Data 2",
-    name: "Contract Renewals",
-    department: "Legal",
-    owner: "P. Desai",
-    dueTick: 3,
-    submitAtTick: 5, // two follow-ups, then a recon mismatch
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["renewals_due", "auto_renewed"],
-    flags: [],
-  },
-  {
-    id: "ds-12",
-    reportId: "rep-4",
-    label: "Data 3",
-    name: "Supplier Scorecards",
-    department: "Quality",
-    owner: "T. Nair",
-    dueTick: 3,
-    submitAtTick: 4,
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["avg_score", "critical_ncrs"],
-    flags: [],
-  },
-  {
-    id: "ds-13",
-    reportId: "rep-4",
-    label: "Data 4",
-    name: "Vendor Insurance Proofs",
-    department: "External Vendor",
-    owner: "Apex Suppliers Ltd",
-    dueTick: 2,
-    submitAtTick: null, // never submits → full ladder → human alert
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["policies_valid"],
-    flags: [],
-  },
+  // ── Report 4: CSR Annual Report — Companies Act §135 ──
+  { id: "ds-19", reportId: "rep-4", label: "Data 1", name: "CSR Project Register", department: "CSR", owner: "Bala Subrahmanyam B", dueTick: 2, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["projects_completed", "ongoing_projects"], flags: [], principle: "Schedule VII activities", evidence: ["Project MOUs", "Photo documentation"] },
+  { id: "ds-20", reportId: "rep-4", label: "Data 2", name: "CSR Spend Ledger", department: "Finance", owner: "Avinash P", dueTick: 2, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["csr_obligation_lakhs", "csr_spent_lakhs"], flags: [], principle: "§135(5) — 2% obligation", evidence: ["Ledger extract", "Utilization certificates"] },
+  { id: "ds-21", reportId: "rep-4", label: "Data 3", name: "Impact Assessment", department: "External Agency", owner: "SoulAce Consulting", dueTick: 3, submitAtTick: 5, status: "pending", remindersSent: 0, expectedFields: ["projects_assessed", "impact_score", "beneficiary_reach"], flags: [], principle: "CSR Rules 2021 — impact assessment", evidence: ["Signed assessment report"] },
 
-  // ── Report 5: finance pack — fast and clean except one variance ──
-  {
-    id: "ds-14",
-    reportId: "rep-5",
-    label: "Data 1",
-    name: "P&L Summary",
-    department: "Finance",
-    owner: "G. Reddy",
-    dueTick: 1,
-    submitAtTick: 1, // on time — but recon catches an expense variance
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["net_profit_lakhs", "opex_lakhs"],
-    flags: [],
-  },
-  {
-    id: "ds-15",
-    reportId: "rep-5",
-    label: "Data 2",
-    name: "Accounts Receivable",
-    department: "Finance",
-    owner: "H. Mehta",
-    dueTick: 1,
-    submitAtTick: 2, // one day late, clean
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["ar_outstanding_lakhs", "overdue_90d_lakhs"],
-    flags: [],
-  },
-  {
-    id: "ds-16",
-    reportId: "rep-5",
-    label: "Data 3",
-    name: "Treasury Position",
-    department: "Treasury",
-    owner: "L. Kapoor",
-    dueTick: 2,
-    submitAtTick: 2, // on time, clean
-    status: "pending",
-    remindersSent: 0,
-    expectedFields: ["cash_on_hand_lakhs", "fx_exposure_pct"],
-    flags: [],
-  },
-
-  // ── Report 6: BRSR — the 10 real AREPL SPOCs from the client email ──
-  { id: "ds-17", reportId: "rep-6", label: "Data 1", name: "Company Secretary KPIs", department: "Company Secretary", owner: "Ravi Kumar P", dueTick: 2, submitAtTick: 2, status: "pending", remindersSent: 0, expectedFields: ["board_meetings_held", "independent_directors_pct"], flags: [] },
-  { id: "ds-18", reportId: "rep-6", label: "Data 2", name: "Finance KPIs", department: "Finance", owner: "Avinash P", dueTick: 2, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["turnover_cr", "csr_spend_pct"], flags: [] },
-  { id: "ds-19", reportId: "rep-6", label: "Data 3", name: "Sustainability KPIs", department: "Sustainability", owner: "Mansi S", dueTick: 2, submitAtTick: 2, status: "pending", remindersSent: 0, expectedFields: ["ghg_scope1_tco2e", "ghg_scope2_tco2e"], flags: [] },
-  { id: "ds-20", reportId: "rep-6", label: "Data 4", name: "HR KPIs", department: "HR", owner: "Hima Bindu K", dueTick: 3, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["total_employees", "training_coverage_pct"], flags: [] },
-  { id: "ds-21", reportId: "rep-6", label: "Data 5", name: "CSR KPIs", department: "CSR", owner: "Bala Subrahmanyam B", dueTick: 3, submitAtTick: null, status: "pending", remindersSent: 0, expectedFields: ["csr_projects", "beneficiaries"], flags: [] },
-  { id: "ds-22", reportId: "rep-6", label: "Data 6", name: "Marketing KPIs", department: "Marketing", owner: "Pavan Kumar D", dueTick: 3, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["consumer_complaints", "complaints_resolved_pct"], flags: [] },
-  { id: "ds-23", reportId: "rep-6", label: "Data 7", name: "Procurement KPIs", department: "Procurement", owner: "Prasanna D", dueTick: 4, submitAtTick: 5, status: "pending", remindersSent: 0, expectedFields: ["msme_sourcing_pct", "local_sourcing_pct"], flags: [] },
-  { id: "ds-24", reportId: "rep-6", label: "Data 8", name: "HSE KPIs", department: "HSE", owner: "Palla Satish", dueTick: 4, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["ltifr", "safety_incidents"], flags: [] },
-  { id: "ds-25", reportId: "rep-6", label: "Data 9", name: "Energy KPIs", department: "Energy", owner: "Kondala Santhoshkumar", dueTick: 4, submitAtTick: 5, status: "pending", remindersSent: 0, expectedFields: ["energy_consumed_gj", "renewable_energy_pct"], flags: [] },
-  { id: "ds-26", reportId: "rep-6", label: "Data 10", name: "IT KPIs", department: "IT", owner: "Ramesh Kumar O", dueTick: 5, submitAtTick: 5, status: "pending", remindersSent: 0, expectedFields: ["data_breaches", "privacy_complaints"], flags: [] },
+  // ── Report 5: quarterly ESG data book — fast, clean tracker ──
+  { id: "ds-22", reportId: "rep-5", label: "Data 1", name: "Energy & Water Tracker", department: "Energy", owner: "Kondala Santhoshkumar", dueTick: 1, submitAtTick: 1, status: "pending", remindersSent: 0, expectedFields: ["energy_gj_q1", "water_kl_q1"], flags: [], principle: "Internal ESG KPI set", evidence: ["Monthly meter summary"] },
+  { id: "ds-23", reportId: "rep-5", label: "Data 2", name: "Emissions Tracker", department: "Sustainability", owner: "Mansi S", dueTick: 1, submitAtTick: 2, status: "pending", remindersSent: 0, expectedFields: ["scope1_q1_tco2e", "scope2_q1_tco2e"], flags: [], principle: "Internal ESG KPI set", evidence: ["Calc workbook Q1"] },
+  { id: "ds-24", reportId: "rep-5", label: "Data 3", name: "Safety & Incident Tracker", department: "HSE", owner: "Palla Satish", dueTick: 2, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["incidents_q1", "near_misses_q1"], flags: [], principle: "Internal ESG KPI set", evidence: ["Incident register Q1"] },
 ];
 
 /**
- * What the Extraction Agent "finds" in each submitted document.
- * ds-1 revenue drifts +8% vs ERP → reconciliation flag.
- * ds-3 is missing damaged_units → validation flag.
+ * What the Extraction Agent "finds" in each submitted sheet.
+ * Deliberate exceptions: ds-4 missing training coverage (validation flag),
+ * ds-8 & ds-12 & ds-20 drift vs the reference system (reconciliation flags),
+ * ds-5 and ds-18 never arrive (human alerts).
  */
 export const submittedData: Record<string, Record<string, number>> = {
-  "ds-1": { revenue_lakhs: 521, units_sold: 1190 },
-  "ds-2": { output_units: 14200, downtime_hours: 12 },
-  "ds-3": { closing_stock: 8400, variance_pct: 0 }, // damaged_units missing
-  "ds-5": { emissions_tco2e: 1240, renewable_pct: 34 },
-  "ds-6": { grid_kwh: 88200, solar_kwh: 21400 },
-  // Report 3 — logistics
-  "ds-7": { trips_completed: 342, utilization_pct: 87 },
-  "ds-8": { units_shipped: 12650, pending_orders: 210 }, // shipped drifts vs ERP
-  "ds-9": { freight_cost_lakhs: 46, fuel_surcharge_pct: 11 }, // damage_claims missing
-  // Report 4 — vendor audit
-  "ds-10": { certified_vendors: 128, expired_certs: 6 },
-  "ds-11": { renewals_due: 19, auto_renewed: 7 }, // renewals drift vs ERP
-  "ds-12": { avg_score: 4, critical_ncrs: 2 },
-  // Report 5 — finance pack
-  "ds-14": { net_profit_lakhs: 212, opex_lakhs: 348 }, // opex drifts vs ERP
-  "ds-15": { ar_outstanding_lakhs: 486, overdue_90d_lakhs: 62 },
-  "ds-16": { cash_on_hand_lakhs: 910, fx_exposure_pct: 18 },
-  // Report 6 — BRSR (AREPL FY26)
-  "ds-17": { board_meetings_held: 6, independent_directors_pct: 50 },
-  "ds-18": { turnover_cr: 842, csr_spend_pct: 2.1 },
-  "ds-19": { ghg_scope1_tco2e: 3120, ghg_scope2_tco2e: 5480 },
-  "ds-20": { total_employees: 1462 }, // training_coverage_pct missing → validation flag
-  "ds-22": { consumer_complaints: 38, complaints_resolved_pct: 97 },
-  "ds-23": { msme_sourcing_pct: 31, local_sourcing_pct: 64 },
-  "ds-24": { ltifr: 0.4, safety_incidents: 3 }, // incidents drift vs HSE register
-  "ds-25": { energy_consumed_gj: 148200, renewable_energy_pct: 22 },
-  "ds-26": { data_breaches: 0, privacy_complaints: 1 },
+  // BRSR
+  "ds-1": { board_meetings_held: 6, independent_directors_pct: 50 },
+  "ds-2": { turnover_cr: 842, csr_spend_pct: 2.1 },
+  "ds-3": { ghg_scope1_tco2e: 3120, ghg_scope2_tco2e: 5480 },
+  "ds-4": { total_employees: 1462 }, // training_coverage_pct missing → validation flag
+  "ds-6": { consumer_complaints: 38, complaints_resolved_pct: 97 },
+  "ds-7": { msme_sourcing_pct: 31, local_sourcing_pct: 64 },
+  "ds-8": { ltifr: 0.4, safety_incidents: 3 }, // register says 5 → recon flag
+  "ds-9": { energy_consumed_gj: 148200, renewable_energy_pct: 22 },
+  "ds-10": { data_breaches: 0, privacy_complaints: 1 },
+  // Sustainability Report
+  "ds-11": { material_topics: 14, stakeholders_engaged: 220 },
+  "ds-12": { water_withdrawal_kl: 96400, waste_recycled_pct: 78 }, // meter says 91,800 → recon flag
+  "ds-13": { women_workforce_pct: 27, grievances_resolved: 12 },
+  "ds-14": { ethics_trainings: 9, policy_updates: 4 },
+  // Assurance pack
+  "ds-15": { utility_invoices_count: 12, meter_log_months: 12 },
+  "ds-16": { incident_reports_count: 5, manhours_lakhs: 31 },
+  "ds-17": { pf_coverage_pct: 100, wage_records_months: 12 },
+  // CSR report
+  "ds-19": { projects_completed: 11, ongoing_projects: 4 },
+  "ds-20": { csr_obligation_lakhs: 168, csr_spent_lakhs: 176 }, // books say 181 → recon flag
+  "ds-21": { projects_assessed: 6, impact_score: 8 }, // beneficiary_reach missing → validation flag
+  // ESG data book
+  "ds-22": { energy_gj_q1: 36900, water_kl_q1: 22400 },
+  "ds-23": { scope1_q1_tco2e: 760, scope2_q1_tco2e: 1310 },
+  "ds-24": { incidents_q1: 1, near_misses_q1: 6 },
 };
 
-/** Mock ERP / system-of-record snapshot the Reconciliation Agent compares against. */
+/** Reference system snapshot (ERP / HSE register / audited books) for reconciliation. */
 export const erpSnapshot: Record<string, Record<string, number>> = {
-  "ds-1": { revenue_lakhs: 482, units_sold: 1190 },
-  "ds-2": { output_units: 14200, downtime_hours: 12 },
-  "ds-3": { closing_stock: 8400, variance_pct: 0 },
-  "ds-5": { emissions_tco2e: 1240, renewable_pct: 34 },
-  "ds-6": { grid_kwh: 88200, solar_kwh: 21400 },
-  // Report 3 — logistics
-  "ds-7": { trips_completed: 342, utilization_pct: 87 },
-  "ds-8": { units_shipped: 11980, pending_orders: 210 }, // +5.6% mismatch on units_shipped
-  "ds-9": { freight_cost_lakhs: 46, fuel_surcharge_pct: 11 },
-  // Report 4 — vendor audit
-  "ds-10": { certified_vendors: 128, expired_certs: 6 },
-  "ds-11": { renewals_due: 23, auto_renewed: 7 }, // -17.4% mismatch on renewals_due
-  "ds-12": { avg_score: 4, critical_ncrs: 2 },
-  // Report 5 — finance pack
-  "ds-14": { net_profit_lakhs: 212, opex_lakhs: 330 }, // +5.5% mismatch on opex
-  "ds-15": { ar_outstanding_lakhs: 486, overdue_90d_lakhs: 62 },
-  "ds-16": { cash_on_hand_lakhs: 910, fx_exposure_pct: 18 },
-  // Report 6 — BRSR (AREPL FY26): reference = HSE register / audited books
-  "ds-17": { board_meetings_held: 6, independent_directors_pct: 50 },
-  "ds-18": { turnover_cr: 842, csr_spend_pct: 2.1 },
-  "ds-19": { ghg_scope1_tco2e: 3120, ghg_scope2_tco2e: 5480 },
-  "ds-20": { total_employees: 1462 },
-  "ds-22": { consumer_complaints: 38, complaints_resolved_pct: 97 },
-  "ds-23": { msme_sourcing_pct: 31, local_sourcing_pct: 64 },
-  "ds-24": { ltifr: 0.4, safety_incidents: 5 }, // submitted 3 vs register 5 → flag
-  "ds-25": { energy_consumed_gj: 148200, renewable_energy_pct: 22 },
-  "ds-26": { data_breaches: 0, privacy_complaints: 1 },
+  "ds-1": { board_meetings_held: 6, independent_directors_pct: 50 },
+  "ds-2": { turnover_cr: 842, csr_spend_pct: 2.1 },
+  "ds-3": { ghg_scope1_tco2e: 3120, ghg_scope2_tco2e: 5480 },
+  "ds-4": { total_employees: 1462 },
+  "ds-6": { consumer_complaints: 38, complaints_resolved_pct: 97 },
+  "ds-7": { msme_sourcing_pct: 31, local_sourcing_pct: 64 },
+  "ds-8": { ltifr: 0.4, safety_incidents: 5 }, // HSE register
+  "ds-9": { energy_consumed_gj: 148200, renewable_energy_pct: 22 },
+  "ds-10": { data_breaches: 0, privacy_complaints: 1 },
+  "ds-11": { material_topics: 14, stakeholders_engaged: 220 },
+  "ds-12": { water_withdrawal_kl: 91800, waste_recycled_pct: 78 }, // flow-meter logs
+  "ds-13": { women_workforce_pct: 27, grievances_resolved: 12 },
+  "ds-14": { ethics_trainings: 9, policy_updates: 4 },
+  "ds-15": { utility_invoices_count: 12, meter_log_months: 12 },
+  "ds-16": { incident_reports_count: 5, manhours_lakhs: 31 },
+  "ds-17": { pf_coverage_pct: 100, wage_records_months: 12 },
+  "ds-19": { projects_completed: 11, ongoing_projects: 4 },
+  "ds-20": { csr_obligation_lakhs: 168, csr_spent_lakhs: 181 }, // audited books
+  "ds-21": { projects_assessed: 6, impact_score: 8 },
+  "ds-22": { energy_gj_q1: 36900, water_kl_q1: 22400 },
+  "ds-23": { scope1_q1_tco2e: 760, scope2_q1_tco2e: 1310 },
+  "ds-24": { incidents_q1: 1, near_misses_q1: 6 },
 };

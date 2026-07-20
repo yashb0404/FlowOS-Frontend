@@ -162,6 +162,16 @@ export function ReportDeck() {
               </>
             )}
           </p>
+          {rep.regulation && (
+            <p className="text-[9.5px] text-slate-400 mt-1 truncate">
+              ⚖ {rep.regulation}
+              {rep.assurance && rep.assurance !== "none" && (
+                <span className="ml-1.5 px-1.5 py-px rounded border bg-indigo-50 border-indigo-200 text-[#3d5a99] font-semibold uppercase text-[8.5px]">
+                  {rep.assurance} assurance
+                </span>
+              )}
+            </p>
+          )}
           <p className="text-[10px] text-slate-400 mt-1 truncate">
             {lastEvent ? `Day ${lastEvent.timestamp}: ${lastEvent.message}` : `Scheduled — advance the day to start collection.`}
           </p>
