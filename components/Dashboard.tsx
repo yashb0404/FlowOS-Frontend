@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { DataSource, Report, SourceStatus } from "@/lib/types";
 import { reportProgress } from "@/lib/engine";
 import { parseSheet } from "@/lib/parseSheet";
+import { downloadSheet } from "@/lib/sheetExport";
 
 const SOURCE_STATUS: Record<SourceStatus, { label: string; cls: string; dot: string; pulse?: boolean }> = {
   pending: { label: "Scheduled", cls: "bg-slate-100 text-slate-500 border-slate-200", dot: "bg-slate-400" },
@@ -35,9 +36,11 @@ export function Dashboard({ reportId }: { reportId: string }) {
   const progress = reportProgress(rep, sources);
   const rs = REPORT_STATUS[rep.status];
 
-  // Cumulative submissions per day for the trend line
-  const days = Array.from({ length: Math.max(tick, 1) + 1 }, (_, d) =>
-    repEvents.filter((e) => e.kind === "submitted" && e.timestamp <= d).length
+  // Window the chart to the interesting period: last submission + 2 days, min 6.
+  const lastSubmitDay = Math.max(0, ...repEvents.filter((e) => e.kind === "submitted").map((e) => e.timestamp));
+  const windowEnd = Math.max(6, Math.min(Math.max(tick, 1), lastSubmitDay + 2));
+  const perDay = Array.from({ length: windowEnd + 1 }, (_, d) =>
+    repEvents.filter((e) => e.kind === "submitted" && e.timestamp === d).length
   );
 
   const byDept = Object.entries(
@@ -69,7 +72,7 @@ export function Dashboard({ reportId }: { reportId: string }) {
             </div>
             <span className="text-[9.5px] px-2 py-0.5 rounded-full glass-soft text-slate-500">Day {tick}</span>
           </div>
-          <TrendChart data={days} max={repSources.length} />
+          <TrendChart perDay={perDay} max={repSources.length} />
         </div>
         <div className="glass rounded-xl p-4 fade-up fade-up-2">
           <h3 className="text-[12.5px] font-semibold text-slate-800 mb-0.5">Department Compliance</h3>
@@ -157,7 +160,7 @@ export function Dashboard({ reportId }: { reportId: string }) {
           </thead>
           <tbody>
             {repSources.map((src) => (
-              <SourceRow key={src.id} src={src} tick={tick} />
+              <SourceRow key={src.id} src={src} tick={tick} repName={rep.name} />
             ))}
           </tbody>
         </table>
@@ -185,23 +188,51 @@ function Kpi({ label, value, note, tone, icon, delay }: { label: string; value: 
   );
 }
 
-function TrendChart({ data, max }: { data: number[]; max: number }) {
-  const W = 320;
-  const H = 72;
-  const n = Math.max(data.length - 1, 1);
-  const pts = data.map((v, i) => `${(i / n) * W},${H - (v / Math.max(max, 1)) * (H - 8) - 4}`);
+function TrendChart({ perDay, max }: { perDay: number[]; max: number }) {
+  const W = 340;
+  const H = 96;
+  const PAD = 14;
+  const n = perDay.length;
+  const slot = (W - PAD * 2) / n;
+  const denom = Math.max(max, 1);
+  const cum = perDay.reduce<number[]>((acc, v) => [...acc, (acc[acc.length - 1] ?? 0) + v], []);
+  const y = (v: number) => H - 18 - (v / denom) * (H - 34);
+  const pts = cum.map((v, i) => `${PAD + i * slot + slot / 2},${y(v)}`);
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 84 }} preserveAspectRatio="none">
-      <polyline points={`0,${H} ${pts.join(" ")} ${W},${H}`} fill="rgba(61,90,153,0.10)" stroke="none" />
-      <polyline points={pts.join(" ")} fill="none" stroke="#3d5a99" strokeWidth="2" strokeLinejoin="round" />
-      {data.length > 1 && (
-        <circle
-          cx={W}
-          cy={H - (data[data.length - 1] / Math.max(max, 1)) * (H - 8) - 4}
-          r="3.5"
-          fill="#d63a5f"
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 110 }}>
+      {/* daily submission bars */}
+      {perDay.map((v, i) => (
+        <rect
+          key={i}
+          x={PAD + i * slot + slot * 0.25}
+          y={v > 0 ? y(v) : H - 18}
+          width={slot * 0.5}
+          height={v > 0 ? H - 18 - y(v) : 0}
+          rx={1.5}
+          fill="rgba(61,90,153,0.25)"
         />
+      ))}
+      {/* cumulative line */}
+      <polyline points={pts.join(" ")} fill="none" stroke="#3d5a99" strokeWidth="2" strokeLinejoin="round" />
+      {cum.map((v, i) =>
+        perDay[i] > 0 ? <circle key={i} cx={PAD + i * slot + slot / 2} cy={y(v)} r="2.5" fill="#3d5a99" /> : null
       )}
+      <circle cx={PAD + (n - 1) * slot + slot / 2} cy={y(cum[n - 1])} r="3.5" fill="#d63a5f" />
+      {/* baseline + day labels */}
+      <line x1={PAD} y1={H - 18} x2={W - PAD} y2={H - 18} stroke="rgba(100,116,139,0.25)" strokeWidth="1" />
+      {perDay.map((_, i) =>
+        i % Math.ceil(n / 8) === 0 ? (
+          <text key={i} x={PAD + i * slot + slot / 2} y={H - 6} textAnchor="middle" fontSize="7.5" fill="#94a3b8">
+            D{i}
+          </text>
+        ) : null
+      )}
+      {/* target line */}
+      <line x1={PAD} y1={y(max)} x2={W - PAD} y2={y(max)} stroke="rgba(214,58,95,0.35)" strokeWidth="1" strokeDasharray="3 3" />
+      <text x={W - PAD} y={y(max) - 3} textAnchor="end" fontSize="7.5" fill="#d63a5f">
+        target {max}
+      </text>
     </svg>
   );
 }
@@ -254,21 +285,25 @@ function UploadButton({ src }: { src: DataSource }) {
   );
 }
 
-function SourceRow({ src, tick }: { src: DataSource; tick: number }) {
+function SourceRow({ src, tick, repName }: { src: DataSource; tick: number; repName: string }) {
+  const [showSheet, setShowSheet] = useState(false);
   const st = SOURCE_STATUS[src.status];
   const overdue = tick > src.dueTick && src.status !== "submitted";
   const openFlags = src.flags.filter((f) => f.status === "open").length;
   const resolvedFlags = src.flags.filter((f) => f.status !== "open").length;
 
   return (
+    <>
     <tr className="row-hover border-t border-slate-200/60">
       <td className="px-6 py-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setShowSheet((v) => !v)} title="Click to view the data sheet">
           <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 border bg-[#f4ede3] text-slate-500 border-slate-200">
             {src.label.replace("Data ", "D")}
           </span>
           <div>
-            <div className="font-medium text-slate-800 text-[13px]">{src.name}</div>
+            <div className="font-medium text-slate-800 text-[13px]">
+              {src.name} <span className="text-slate-300 text-[10px]">{showSheet ? "▾" : "▸"}</span>
+            </div>
             <div className="text-[10.5px] text-slate-400">{src.principle ?? src.label}</div>
           </div>
         </div>
@@ -301,5 +336,47 @@ function SourceRow({ src, tick }: { src: DataSource; tick: number }) {
         )}
       </td>
     </tr>
+    {showSheet && (
+      <tr className="border-t border-slate-200/40 bg-slate-50/50">
+        <td colSpan={7} className="px-6 py-4">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            {/* Excel-style live sheet */}
+            <div className="rounded-lg border border-emerald-700/30 overflow-hidden shadow-sm">
+              <div className="bg-emerald-700 text-white text-[10px] font-semibold px-3 py-1.5 flex items-center gap-2">
+                <span className="bg-white/20 rounded px-1">▦</span>
+                BRSR - FY26 - AREPL - {src.department}.xlsx {src.status !== "submitted" && "(awaiting SPOC)"}
+              </div>
+              <table className="text-[11px] bg-white">
+                <thead>
+                  <tr className="bg-emerald-50 text-emerald-900">
+                    <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold">KPI</th>
+                    <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold w-28">FY26 Value</th>
+                    <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold">Evidence Required</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {src.expectedFields.map((f, i) => (
+                    <tr key={f}>
+                      <td className="border border-slate-200 px-3 py-1.5 text-slate-700">{f.replace(/_/g, " ")}</td>
+                      <td className={`border border-slate-200 px-3 py-1.5 tabular-nums font-medium ${src.submittedFields && f in src.submittedFields ? "text-slate-900" : "text-slate-300 italic"}`}>
+                        {src.submittedFields && f in src.submittedFields ? src.submittedFields[f] : "—"}
+                      </td>
+                      <td className="border border-slate-200 px-3 py-1.5 text-slate-400">📎 {src.evidence?.[i] ?? src.evidence?.[0] ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); downloadSheet(src, repName); }}
+              className="text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+            >
+              ⬇ Download {src.status === "submitted" ? "filled sheet" : "blank template"} (.xlsx)
+            </button>
+          </div>
+        </td>
+      </tr>
+    )}
+    </>
   );
 }

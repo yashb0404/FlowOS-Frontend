@@ -5,6 +5,26 @@ import { useStore } from "@/lib/store";
 import { Report, ReportSection } from "@/lib/types";
 import { priorYearData } from "@/lib/seed";
 
+/** Open the report document in a print window — the browser's Save-as-PDF produces the file. */
+function printReport(repId: string, repName: string) {
+  const node = document.getElementById(`repdoc-${repId}`);
+  if (!node) return;
+  const w = window.open("", "_blank", "width=900,height=1000");
+  if (!w) return;
+  w.document.write(`<!doctype html><html><head><title>${repName}</title>
+    <style>
+      body { font-family: Georgia, 'Times New Roman', serif; color: #1e293b; margin: 40px; }
+      button, input { display: none !important; }
+      table { border-collapse: collapse; width: 100%; }
+      h2 { margin: 4px 0; } h3 { margin: 2px 0; }
+      .glass, .glass-soft, [class*="rounded"] { border: none; }
+      div { page-break-inside: avoid; }
+    </style></head><body>${node.innerHTML}</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 400);
+}
+
 /** Infer a display unit from the KPI field name. */
 function unitOf(field: string): string {
   if (field.endsWith("_pct")) return "%";
@@ -71,7 +91,7 @@ export function Reports({ reportId }: { reportId: string }) {
     <div className="flex flex-col gap-5">
       <BriefingArchitect reportId={reportId} />
       {generated.map((rep) => (
-        <div key={rep.id} className="glass rounded-2xl overflow-hidden fade-up">
+        <div key={rep.id} id={`repdoc-${rep.id}`} className="glass rounded-2xl overflow-hidden fade-up">
           {/* Document header — template look */}
           <div className="px-8 pt-7 pb-5 border-b-2 border-slate-800/80 bg-gradient-to-b from-rose-50/50 to-transparent">
             <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -105,6 +125,12 @@ export function Reports({ reportId }: { reportId: string }) {
                   PARTIAL · {rep.gaps?.length ?? 0} GAP(S) MARKED
                 </span>
               )}
+              <button
+                onClick={() => printReport(rep.id, rep.name)}
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-slate-300 bg-white/70 text-slate-600 hover:text-slate-900 hover:border-slate-400 transition-colors"
+              >
+                ⬇ Download PDF
+              </button>
             </div>
           </div>
 
