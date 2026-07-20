@@ -34,9 +34,13 @@ function firstName(owner: string): string {
  */
 export function advanceSource(
   src: DataSource,
-  tick: number
+  tick: number,
+  repName = ""
 ): { src: DataSource; events: AgentEvent[] } {
   const events: AgentEvent[] = [];
+  const evidenceLine = src.evidence?.length
+    ? `\n\nPlease attach the required backup evidence with your submission: ${src.evidence.join(", ")}. Data without supporting evidence cannot be taken up for assurance.`
+    : "";
 
   if (src.status === "submitted") return { src, events };
 
@@ -61,20 +65,23 @@ export function advanceSource(
   if (daysPastDue <= 2) {
     const n = daysPastDue + 1;
     const overdueTxt =
-      daysPastDue === 0 ? "is due today" : `is ${daysPastDue} day${daysPastDue > 1 ? "s" : ""} overdue`;
-    const comm: CommPayload = {
-      channel: "email",
-      to: src.owner,
-      subject:
-        n === 1
-          ? `Reminder: "${src.name}" is due today`
-          : `Follow-up #${n}: "${src.name}" ${overdueTxt}`,
-      body: `Hi ${firstName(src.owner)},\n\n${
-        n === 1
-          ? `Your submission "${src.name}" (${src.label} for the ${src.department} section) is due today.`
-          : `This is follow-up #${n} — "${src.name}" ${overdueTxt}. The report it feeds cannot be generated until your data arrives.`
-      }\n\nPlease upload it to the portal or reply with the attachment.\n\n— FlowOS Collection Agent`,
-    };
+      daysPastDue === 0 ? "is due today" : `is now ${daysPastDue} working day${daysPastDue > 1 ? "s" : ""} overdue`;
+
+    const subject =
+      n === 1
+        ? `[Action Required] ${src.name} — data sheet due today · ${repName}`
+        : n === 2
+          ? `Follow-up: ${src.name} ${overdueTxt} · ${repName}`
+          : `FINAL REMINDER: ${src.name} — escalating to management tomorrow`;
+
+    const body =
+      n === 1
+        ? `Dear ${firstName(src.owner)},\n\nGreetings from Group Sustainability.\n\nAs part of the data collation for "${repName}", the data sheet "${src.name}" (${src.department} function${src.principle ? ` · ${src.principle}` : ""}) is due for submission today.\n\nRequest you to kindly fill in the shared Excel sheet with complete FY26 data and upload it to the ESG portal, or reply to this email with the completed sheet attached.${evidenceLine}\n\nIn case of any difficulty with the sheet or the links, please reach out — happy to walk you through it.\n\nWarm regards,\nFlowOS Collection Agent\non behalf of Group Sustainability · AREPL`
+        : n === 2
+          ? `Dear ${firstName(src.owner)},\n\nGentle reminder — the data sheet "${src.name}" for "${repName}" ${overdueTxt}.\n\nPlease note that internal assessment with group sustainability is scheduled for 27–30 April, and your KPIs cannot be taken up for review until the completed sheet is received.${evidenceLine}\n\nRequest you to prioritise this today. Your functional head has been copied for visibility.\n\nRegards,\nFlowOS Collection Agent\non behalf of Group Sustainability · AREPL`
+          : `Dear ${firstName(src.owner)},\n\nThis is the final automated reminder — "${src.name}" ${overdueTxt} and is now blocking "${repName}".\n\nExternal assurance covers a sample of more than 90% of reported data; missing submissions directly risk the assurance timeline and the report closure date.\n\nIf the completed sheet is not received by end of day, this item will be escalated to the Operations Lead on Teams tomorrow morning for manual intervention.\n\nRegards,\nFlowOS Collection Agent\non behalf of Group Sustainability · AREPL`;
+
+    const comm: CommPayload = { channel: "email", to: src.owner, subject, body };
     events.push(
       makeEvent(
         src.reportId,
@@ -93,7 +100,7 @@ export function advanceSource(
     const comm: CommPayload = {
       channel: "teams",
       to: "Operations Lead",
-      body: `🔔 Human intervention needed: "${src.name}" (${src.label}, owner: ${src.owner}, ${src.department}) is 3 days overdue after 3 email follow-ups. The dependent report is blocked. Please chase manually or decide on partial generation.`,
+      body: `🔔 Escalation — automated follow-ups exhausted\n\nData sheet: "${src.name}" (${src.department}, owner: ${src.owner})\nReport blocked: "${repName}"\nStatus: 3 working days overdue · 3 email reminders sent, no response\n\nImpact: this KPI set falls inside the external assurance sample (>90%); continued delay risks the assurance window and report closure.\n\nRequested action: chase the owner directly, nominate an alternate SPOC, or approve partial generation with the gap explicitly disclosed.`,
     };
     events.push(
       makeEvent(
@@ -226,9 +233,10 @@ function buildSections(sources: DataSource[]): ReportSection[] {
       const overrides = s.flags.filter((f) => f.status === "overridden").length;
       const approved = s.flags.filter((f) => f.status === "approved").length;
       return {
-        sourceName: `${s.label} · ${s.name}`,
+        sourceName: s.name,
         department: s.department,
         owner: s.owner,
+        principle: s.principle,
         values,
         note:
           overrides + approved > 0

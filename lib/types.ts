@@ -55,6 +55,8 @@ export interface ReportSection {
   owner: string;
   values: Record<string, number | string>;
   note?: string;
+  /** Framework clause this section discloses under, e.g. "P6 — Environment". */
+  principle?: string;
 }
 
 export type AssuranceLevel = "none" | "internal" | "limited" | "reasonable";

@@ -52,7 +52,8 @@ function reducer(state: State, action: Action): State {
 
       const nextSources = state.sources.map((src) => {
         const wasSubmitted = src.status === "submitted";
-        const { src: advanced, events: e1 } = advanceSource(src, newTick);
+        const repName = state.reports.find((r) => r.id === src.reportId)?.name ?? "";
+        const { src: advanced, events: e1 } = advanceSource(src, newTick, repName);
         newEvents.push(...e1);
         if (!wasSubmitted && advanced.status === "submitted") {
           const { src: processed, events: e2 } = runSourcePipeline(advanced, newTick);

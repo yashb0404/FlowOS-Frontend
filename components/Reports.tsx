@@ -2,7 +2,18 @@
 
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { Report } from "@/lib/types";
+import { Report, ReportSection } from "@/lib/types";
+
+/** Group report sections under their framework principle, preserving order. */
+function groupByPrinciple(sections: ReportSection[]): [string, ReportSection[]][] {
+  const map = new Map<string, ReportSection[]>();
+  for (const sec of sections) {
+    const key = sec.principle ?? "General Disclosures";
+    if (!map.has(key)) map.set(key, []);
+    map.get(key)!.push(sec);
+  }
+  return [...map.entries()];
+}
 
 export function Reports({ reportId }: { reportId: string }) {
   const { reports } = useStore();
@@ -35,7 +46,7 @@ export function Reports({ reportId }: { reportId: string }) {
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold">
-                  FlowOS · Auto-generated from template
+                  RNGalla Family Private Limited · AREPL (Galla Foods)
                 </p>
                 <h2
                   className="text-xl font-bold text-slate-900 mt-1.5"
@@ -44,8 +55,13 @@ export function Reports({ reportId }: { reportId: string }) {
                   {rep.name}
                 </h2>
                 <p className="text-[12px] text-slate-500 mt-1">
-                  {rep.project} · Generated Day {rep.generatedAtTick}
+                  Reporting period: FY26 (Apr&rsquo;25 to Mar&rsquo;26) · Generated Day {rep.generatedAtTick}
                 </p>
+                {rep.regulation && (
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    ⚖ Prepared under <span className="font-medium">{rep.regulation}</span>
+                  </p>
+                )}
               </div>
               {rep.status === "generated" ? (
                 <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -75,36 +91,64 @@ export function Reports({ reportId }: { reportId: string }) {
             </div>
           )}
 
-          {/* Sections per data source */}
-          <div className="px-8 py-6 grid gap-5 md:grid-cols-2">
-            {rep.sections?.map((sec) => (
-              <div key={sec.sourceName} className="rounded-xl border border-slate-200 bg-white/60 p-5">
-                <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-200/80">
-                  <div>
-                    <h3 className="text-[13px] font-semibold text-slate-800">{sec.sourceName}</h3>
-                    <p className="text-[10.5px] text-slate-400">
-                      {sec.department} · {sec.owner}
-                    </p>
-                  </div>
+          {/* Disclosures grouped by framework principle — Section C style */}
+          <div className="px-8 py-6 flex flex-col gap-6">
+            {groupByPrinciple(rep.sections ?? []).map(([principle, secs]) => (
+              <div key={principle}>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#3d5a99]">
+                    {principle}
+                  </span>
+                  <span className="flex-1 h-px bg-slate-300/70" />
                 </div>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {Object.entries(sec.values).map(([k, v]) => (
-                    <div key={k}>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
-                        {k.replace(/_/g, " ")}
+                <div className="grid gap-4 md:grid-cols-2">
+                  {secs.map((sec) => (
+                    <div key={sec.sourceName} className="rounded-xl border border-slate-200 bg-white/60 p-5">
+                      <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-200/80">
+                        <div>
+                          <h3 className="text-[13px] font-semibold text-slate-800">{sec.sourceName}</h3>
+                          <p className="text-[10.5px] text-slate-400">
+                            {sec.department} · Data owner: {sec.owner}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-xl font-bold tabular-nums text-slate-900 mt-0.5">{v}</div>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {Object.entries(sec.values).map(([k, v]) => (
+                          <div key={k}>
+                            <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                              {k.replace(/_/g, " ")}
+                            </div>
+                            <div className="text-xl font-bold tabular-nums text-slate-900 mt-0.5">{v}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {sec.note && (
+                        <p className="text-[10.5px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-3">
+                          ✎ {sec.note}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
-                {sec.note && (
-                  <p className="text-[10.5px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-3">
-                    ✎ {sec.note}
-                  </p>
-                )}
               </div>
             ))}
           </div>
+
+          {/* Assurance statement */}
+          {rep.assurance && rep.assurance !== "none" && (
+            <div className="mx-8 mb-5 rounded-xl bg-indigo-50/70 border border-indigo-200 p-4">
+              <p className="text-[10px] uppercase tracking-wider font-semibold text-[#3d5a99] mb-1">
+                ✒ Assurance statement
+              </p>
+              <p className="text-[11.5px] text-slate-600 leading-relaxed">
+                {rep.assurance === "reasonable"
+                  ? "The KPIs disclosed above were subjected to reasonable assurance by an independent third-party assurance provider across all locations, covering a sample of more than 90% of reported data. Human corrections made during review are annotated against the respective disclosure."
+                  : rep.assurance === "limited"
+                    ? "The KPIs disclosed above were subjected to limited assurance by an independent third-party assurance provider. Human corrections made during review are annotated against the respective disclosure."
+                    : "The KPIs disclosed above were internally assessed by Group Sustainability together with the respective department SPOCs prior to publication. Human corrections made during review are annotated against the respective disclosure."}
+              </p>
+            </div>
+          )}
 
           <SignOff rep={rep} />
 
