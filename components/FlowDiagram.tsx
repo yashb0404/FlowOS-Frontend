@@ -21,31 +21,48 @@ const NODES: NodeDef[] = [
   { key: "validate", title: "Validation Agent", subtitle: "“N of N fields” completeness", icon: "☑", border: "border-amber-300", text: "text-amber-700", iconBg: "bg-amber-100 text-amber-700 border-amber-300", glow: "shadow-amber-200/60" },
   { key: "reconcile", title: "Reconciliation Agent", subtitle: "Data A = Data B? vs ERP", icon: "≈", border: "border-orange-300", text: "text-orange-700", iconBg: "bg-orange-100 text-orange-700 border-orange-300", glow: "shadow-orange-200/60" },
   { key: "review", title: "Human Review", subtitle: "Approve · override · force-gen", icon: "⚖", border: "border-rose-300", text: "text-rose-700", iconBg: "bg-rose-100 text-rose-700 border-rose-300", glow: "shadow-rose-200/60" },
+  { key: "assure_int", title: "Internal Assurance", subtitle: "Group sustainability + SPOC review", icon: "🛡", border: "border-sky-300", text: "text-sky-700", iconBg: "bg-sky-100 text-sky-700 border-sky-300", glow: "shadow-sky-200/60" },
+  { key: "assure_ext", title: "External Assurance", subtitle: "Third-party · sample >90%", icon: "✒", border: "border-indigo-300", text: "text-indigo-700", iconBg: "bg-indigo-100 text-indigo-700 border-indigo-300", glow: "shadow-indigo-200/60" },
   { key: "generate", title: "Report Generation", subtitle: "Template fills when gate opens", icon: "▦", border: "border-emerald-300", text: "text-emerald-700", iconBg: "bg-emerald-100 text-emerald-700 border-emerald-300", glow: "shadow-emerald-200/60" },
 ];
 
 const NODE_W = 190;
 const NODE_H = 120;
 
-const INITIAL_POS: Record<string, { x: number; y: number }> = {
-  collect: { x: 20, y: 40 },
-  extract: { x: 240, y: 150 },
-  validate: { x: 460, y: 40 },
-  reconcile: { x: 680, y: 150 },
-  review: { x: 900, y: 40 },
-  generate: { x: 1120, y: 150 },
-};
+/** Zig-zag layout for however many nodes this report's pipeline has. */
+function layoutPositions(nodes: NodeDef[]): Record<string, { x: number; y: number }> {
+  const pos: Record<string, { x: number; y: number }> = {};
+  nodes.forEach((n, i) => {
+    pos[n.key] = { x: 20 + i * 220, y: i % 2 === 0 ? 40 : 150 };
+  });
+  return pos;
+}
 
 export function FlowDiagram({ reportId }: { reportId: string }) {
   const { sources: allSources, events: allEvents, reports } = useStore();
   const sources = allSources.filter((s) => s.reportId === reportId);
   const events = allEvents.filter((e) => e.reportId === reportId);
   const rep = reports.find((r) => r.id === reportId);
-  const [positions, setPositions] = useState(INITIAL_POS);
-  const [simStep, setSimStep] = useState<number>(-1); // -1 idle; 0..5 running; 6 done
+
+  // Pipeline shape depends on the report's assurance level.
+  const assurance = rep?.assurance ?? "none";
+  const nodes = NODES.filter((n) => {
+    if (n.key === "assure_int") return assurance !== "none";
+    if (n.key === "assure_ext") return assurance === "reasonable" || assurance === "limited";
+    return true;
+  });
+  const canvasW = 40 + nodes.length * 220;
+
+  const [positions, setPositions] = useState(() => layoutPositions(nodes));
+  const [simStep, setSimStep] = useState<number>(-1); // -1 idle; 0..n-1 running; n done
   const [selected, setSelected] = useState<string | null>(null);
   const dragRef = useRef<{ key: string; dx: number; dy: number; moved: boolean } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const assuredClean = sources.filter(
+    (s) => s.status === "submitted" && s.flags.every((f) => f.status !== "open")
+  ).length;
+  const evidenceReady = sources.filter((s) => s.status === "submitted" && (s.evidence?.length ?? 0) > 0).length;
 
   const counts: Record<string, number> = {
     collect: sources.length,
@@ -53,6 +70,8 @@ export function FlowDiagram({ reportId }: { reportId: string }) {
     validate: sources.filter((s) => s.status === "submitted").length,
     reconcile: events.filter((e) => e.kind === "reconciliation_done" || e.kind === "reconciliation_flag").length,
     review: events.filter((e) => e.kind === "flag_resolved").length,
+    assure_int: assuredClean,
+    assure_ext: evidenceReady,
     generate: events.filter((e) => e.kind === "report_generated").length,
   };
 
@@ -79,16 +98,16 @@ export function FlowDiagram({ reportId }: { reportId: string }) {
   }
 
   async function runSimulation() {
-    if (simStep >= 0 && simStep < 6) return;
-    for (let i = 0; i <= 5; i++) {
+    if (simStep >= 0 && simStep < nodes.length) return;
+    for (let i = 0; i < nodes.length; i++) {
       setSimStep(i);
       await new Promise((r) => setTimeout(r, 700));
     }
-    setSimStep(6);
+    setSimStep(nodes.length);
     setTimeout(() => setSimStep(-1), 2500);
   }
 
-  const running = simStep >= 0 && simStep < 6;
+  const running = simStep >= 0 && simStep < nodes.length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -107,7 +126,7 @@ export function FlowDiagram({ reportId }: { reportId: string }) {
               : "btn-primary text-white"
           }`}
         >
-          {running ? "⟳ Simulating dry run…" : simStep === 6 ? "✓ Dry run complete" : "▶ Test Run Workflow"}
+          {running ? "⟳ Simulating dry run…" : simStep === nodes.length ? "✓ Dry run complete" : "▶ Test Run Workflow"}
         </button>
       </div>
 
@@ -128,12 +147,12 @@ export function FlowDiagram({ reportId }: { reportId: string }) {
           }}
         />
 
-        <div className="relative" style={{ width: 1340, height: 380 }}>
+        <div className="relative" style={{ width: canvasW, height: 380 }}>
           {/* Edges */}
-          <svg className="absolute inset-0 pointer-events-none" width={1340} height={380}>
-            {NODES.slice(0, -1).map((node, i) => {
+          <svg className="absolute inset-0 pointer-events-none" width={canvasW} height={380}>
+            {nodes.slice(0, -1).map((node, i) => {
               const a = positions[node.key];
-              const b = positions[NODES[i + 1].key];
+              const b = positions[nodes[i + 1].key];
               const x1 = a.x + NODE_W;
               const y1 = a.y + NODE_H / 2;
               const x2 = b.x;
@@ -156,10 +175,10 @@ export function FlowDiagram({ reportId }: { reportId: string }) {
           </svg>
 
           {/* Nodes */}
-          {NODES.map((node, idx) => {
+          {nodes.map((node, idx) => {
             const pos = positions[node.key];
             const lit = running && simStep === idx;
-            const done = (running || simStep === 6) && simStep > idx;
+            const done = (running || simStep === nodes.length) && simStep > idx;
             return (
               <div
                 key={node.key}
@@ -201,6 +220,7 @@ export function FlowDiagram({ reportId }: { reportId: string }) {
           repName={rep?.name ?? ""}
           repStatus={rep?.status ?? "collecting"}
           signedBy={rep?.signedBy}
+          assurance={assurance}
           onClose={() => setSelected(null)}
         />
       )}
@@ -248,6 +268,7 @@ function AgentSettings({
   repName,
   repStatus,
   signedBy,
+  assurance,
   onClose,
 }: {
   agentKey: string;
@@ -257,6 +278,7 @@ function AgentSettings({
   repName: string;
   repStatus: string;
   signedBy?: string;
+  assurance: string;
   onClose: () => void;
 }) {
   const [channels, setChannels] = useState(INTAKE_CHANNELS);
@@ -469,6 +491,80 @@ function AgentSettings({
         </div>
       )}
 
+      {agentKey === "assure_int" && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <SettingLabel text="Assessors" />
+            <Chip t="Group Sustainability team" tone="sky" />
+            <Chip t="Department SPOCs" tone="sky" />
+            <SettingLabel text="Window" />
+            <Chip t="27–30 Apr (pre-external)" />
+          </div>
+          <div className="grid md:grid-cols-2 gap-1.5">
+            {sources.map((s) => {
+              const clean = s.status === "submitted" && s.flags.every((f) => f.status !== "open");
+              return (
+                <div key={s.id} className="glass-soft rounded-lg px-3 py-2 flex items-center gap-2 text-[11.5px]">
+                  <span className="font-medium text-slate-700 truncate">{s.name}</span>
+                  <span className="ml-auto whitespace-nowrap">
+                    {s.status !== "submitted" ? (
+                      <span className="text-slate-400">awaiting data</span>
+                    ) : clean ? (
+                      <span className="text-emerald-600 font-medium">✓ internally assured</span>
+                    ) : (
+                      <span className="text-rose-600 font-semibold">⚑ exceptions open</span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-[10.5px] text-slate-400">
+            Internal assessment with group sustainability and SPOCs — every KPI must be exception-free with backup evidence attached before it goes to the external assurer.
+          </p>
+        </div>
+      )}
+
+      {agentKey === "assure_ext" && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <SettingLabel text="Assurance provider" />
+            <Chip t="Third-party assurer (all locations)" tone="indigo" />
+            <SettingLabel text="Level" />
+            <Chip t={`${assurance} assurance`} tone="indigo" />
+            <SettingLabel text="Sample" />
+            <Chip t=">90% of reported data" tone="indigo" />
+            <SettingLabel text="Window" />
+            <Chip t="3rd week of May" />
+          </div>
+          <div>
+            <SettingLabel text="Evidence readiness per source" />
+            <div className="mt-2 grid md:grid-cols-2 gap-1.5">
+              {sources.map((s) => (
+                <div key={s.id} className="glass-soft rounded-lg px-3 py-2 text-[11.5px]">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-slate-700 truncate">{s.name}</span>
+                    <span className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${s.status === "submitted" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-400"}`}>
+                      {s.status === "submitted" ? "SAMPLE READY" : "PENDING"}
+                    </span>
+                  </div>
+                  {s.evidence && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {s.evidence.map((ev) => (
+                        <span key={ev} className="px-1.5 py-0.5 rounded border bg-slate-50 border-slate-200 text-slate-500 text-[9.5px]">📎 {ev}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="text-[10.5px] text-slate-400">
+            Findings raised by the assurer route back to Human Review; closure of findings gates the final assurance report (target 29-May).
+          </p>
+        </div>
+      )}
+
       {agentKey === "generate" && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2 flex-wrap">
@@ -501,6 +597,8 @@ function Chip({ t, tone }: { t: string; tone?: string }) {
     : tone === "amber" ? "bg-amber-50 border-amber-200 text-amber-700"
     : tone === "orange" ? "bg-orange-50 border-orange-200 text-orange-700"
     : tone === "emerald" ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+    : tone === "sky" ? "bg-sky-50 border-sky-200 text-sky-700"
+    : tone === "indigo" ? "bg-indigo-50 border-indigo-200 text-indigo-700"
     : "bg-slate-50 border-slate-200 text-slate-600";
   return <span className={`text-[10.5px] px-2 py-1 rounded-lg border font-medium ${cls}`}>{t}</span>;
 }
