@@ -1,8 +1,10 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 import { DataSource, Report, SourceStatus } from "@/lib/types";
 import { reportProgress } from "@/lib/engine";
+import { parseSheet } from "@/lib/parseSheet";
 
 const SOURCE_STATUS: Record<SourceStatus, { label: string; cls: string; dot: string; pulse?: boolean }> = {
   pending: { label: "Scheduled", cls: "bg-slate-100 text-slate-500 border-slate-200", dot: "bg-slate-400" },
@@ -204,6 +206,54 @@ function TrendChart({ data, max }: { data: number[]; max: number }) {
   );
 }
 
+/** Manual intake: the SPOC's filled Excel/CSV sheet, parsed client-side and fed into the pipeline. */
+function UploadButton({ src }: { src: DataSource }) {
+  const { uploadSubmit } = useStore();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onFile(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const { fields, rowsScanned } = await parseSheet(file, src.expectedFields);
+      if (Object.keys(fields).length === 0) {
+        setError(rowsScanned === 0 ? "No data rows found" : "No expected KPIs matched");
+        return;
+      }
+      uploadSubmit(src.id, file.name, fields);
+    } catch {
+      setError("Could not parse file");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <span className="inline-flex flex-col items-end gap-0.5">
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        className="hidden"
+        onChange={(e) => onFile(e.target.files?.[0])}
+      />
+      <button
+        onClick={() => inputRef.current?.click()}
+        disabled={busy}
+        className="text-[10.5px] font-semibold px-2.5 py-1 rounded-lg border border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 transition-colors whitespace-nowrap disabled:opacity-50"
+        title={`Upload the filled sheet for ${src.name} — expected: ${src.expectedFields.join(", ")}`}
+      >
+        {busy ? "⟳ parsing…" : "⇪ Upload sheet"}
+      </button>
+      {error && <span className="text-[9px] text-rose-500">{error}</span>}
+    </span>
+  );
+}
+
 function SourceRow({ src, tick }: { src: DataSource; tick: number }) {
   const st = SOURCE_STATUS[src.status];
   const overdue = tick > src.dueTick && src.status !== "submitted";
@@ -241,7 +291,7 @@ function SourceRow({ src, tick }: { src: DataSource; tick: number }) {
       </td>
       <td className="px-6 py-3 text-right">
         {src.status !== "submitted" ? (
-          <span className="text-[11px] text-slate-300">—</span>
+          <UploadButton src={src} />
         ) : openFlags > 0 ? (
           <span className="text-[11px] font-semibold text-rose-600">⚑ {openFlags} open</span>
         ) : resolvedFlags > 0 ? (

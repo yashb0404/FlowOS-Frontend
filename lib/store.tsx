@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, useReducer, useCallback, ReactNode } from "react";
 import { AgentEvent, DataSource, Report } from "./types";
-import { seedReports, seedSources } from "./seed";
+import { seedReports, seedSources, submittedData } from "./seed";
 import {
   advanceSource,
   runSourcePipeline,
@@ -33,7 +33,8 @@ type Action =
   | { type: "CLOSE_REPORT"; reportId: string }
   | { type: "SET_ACTIVE_REPORT"; reportId: string | null }
   | { type: "RENAME_REPORT"; reportId: string; name: string }
-  | { type: "CREATE_REPORT"; name: string };
+  | { type: "CREATE_REPORT"; name: string }
+  | { type: "UPLOAD_SUBMIT"; sourceId: string; fileName: string; fields: Record<string, number | string> };
 
 const initialState: State = {
   tick: 0,
@@ -161,6 +162,29 @@ function reducer(state: State, action: Action): State {
       };
     }
 
+    case "UPLOAD_SUBMIT": {
+      const src = state.sources.find((s) => s.id === action.sourceId);
+      if (!src || src.status === "submitted") return state;
+      // Register the parsed sheet as this source's data, then run the normal pipeline on it.
+      submittedData[src.id] = action.fields as Record<string, number>;
+      const newEvents: AgentEvent[] = [
+        makeEvent(
+          src.reportId,
+          src.id,
+          "submitted",
+          `"${src.name}" received — ${src.owner} uploaded "${action.fileName}" (${Object.keys(action.fields).length} field(s) detected). Queued for extraction.`,
+          state.tick,
+          "Collection Agent"
+        ),
+      ];
+      const { src: processed, events: e2 } = runSourcePipeline({ ...src, status: "submitted" }, state.tick);
+      newEvents.push(...e2);
+      const nextSources = state.sources.map((s) => (s.id === src.id ? processed : s));
+      const { reports: nextReports, events: e3 } = checkReportGeneration(state.reports, nextSources, state.tick);
+      newEvents.push(...e3);
+      return { ...state, reports: nextReports, sources: nextSources, events: [...state.events, ...newEvents] };
+    }
+
     case "CREATE_REPORT": {
       const { report, sources } = createReportInstance(action.name.trim() || "Untitled Report", state.tick);
       return {
@@ -201,6 +225,7 @@ interface StoreValue extends State {
   setActiveReport: (reportId: string | null) => void;
   renameReport: (reportId: string, name: string) => void;
   createReport: (name: string) => void;
+  uploadSubmit: (sourceId: string, fileName: string, fields: Record<string, number | string>) => void;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -234,6 +259,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     []
   );
   const createReport = useCallback((name: string) => dispatch({ type: "CREATE_REPORT", name }), []);
+  const uploadSubmit = useCallback(
+    (sourceId: string, fileName: string, fields: Record<string, number | string>) =>
+      dispatch({ type: "UPLOAD_SUBMIT", sourceId, fileName, fields }),
+    []
+  );
 
   const value = useMemo(
     () => ({
@@ -248,8 +278,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setActiveReport,
       renameReport,
       createReport,
+      uploadSubmit,
     }),
-    [state, advanceDay, reset, resolveFlag, forceGenerateReport, signReport, openReport, closeReport, setActiveReport, renameReport, createReport]
+    [state, advanceDay, reset, resolveFlag, forceGenerateReport, signReport, openReport, closeReport, setActiveReport, renameReport, createReport, uploadSubmit]
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
