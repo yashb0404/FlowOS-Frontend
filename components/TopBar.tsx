@@ -3,6 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 
+/** Day 1 = 08-Apr-2026, the FY26 data-collection circulation date. */
+function tickDate(tick: number): string {
+  const d = new Date(2026, 3, 7);
+  d.setDate(d.getDate() + tick);
+  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" }) + " ’26";
+}
+
 export function TopBar() {
   const { tick, advanceDay, reset, sources, reports } = useStore();
 
@@ -37,7 +44,8 @@ export function TopBar() {
           <div className="flex items-center gap-2 text-slate-500">
             <span className="live-dot w-1.5 h-1.5 rounded-full bg-[#3d5a99] text-[#3d5a99]" />
             <span>
-              Day <span className="text-slate-900 font-bold tabular-nums">{tick}</span>
+              Day <span className="text-slate-900 font-bold tabular-nums">{tick}</span>{" "}
+              <span className="text-slate-400 tabular-nums">· {tickDate(tick)}</span>
             </span>
           </div>
           <div className="hidden lg:flex items-center gap-4 font-mono text-[10.5px] border-l border-slate-200 pl-5">
