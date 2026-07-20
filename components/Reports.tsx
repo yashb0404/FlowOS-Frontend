@@ -5,24 +5,114 @@ import { useStore } from "@/lib/store";
 import { Report, ReportSection } from "@/lib/types";
 import { priorYearData } from "@/lib/seed";
 
-/** Open the report document in a print window — the browser's Save-as-PDF produces the file. */
-function printReport(repId: string, repName: string) {
-  const node = document.getElementById(`repdoc-${repId}`);
-  if (!node) return;
-  const w = window.open("", "_blank", "width=900,height=1000");
-  if (!w) return;
-  w.document.write(`<!doctype html><html><head><title>${repName}</title>
-    <style>
-      body { font-family: Georgia, 'Times New Roman', serif; color: #1e293b; margin: 40px; }
-      button, input { display: none !important; }
-      table { border-collapse: collapse; width: 100%; }
-      h2 { margin: 4px 0; } h3 { margin: 2px 0; }
-      .glass, .glass-soft, [class*="rounded"] { border: none; }
-      div { page-break-inside: avoid; }
-    </style></head><body>${node.innerHTML}</body></html>`);
-  w.document.close();
-  w.focus();
-  setTimeout(() => w.print(), 400);
+/** Build a clean, print-formatted document from the report data — Save-as-PDF produces the file. */
+function printReport(rep: Report) {
+  const secs = rep.sections ?? [];
+  const kpis = secs.reduce((n, s) => n + Object.keys(s.values).length, 0);
+  const depts = new Set(secs.map((s) => s.department)).size;
+
+  const kpiRows = (sec: ReportSection) =>
+    Object.entries(sec.values)
+      .map(([k, v]) => {
+        const prev = priorYearData[k];
+        const cur = Number(v);
+        const delta =
+          prev !== undefined && prev !== 0 && !Number.isNaN(cur)
+            ? `${cur >= prev ? "▲" : "▼"} ${Math.abs(((cur - prev) / prev) * 100).toFixed(1)}%`
+            : "—";
+        return `<tr>
+          <td>${k.replace(/_/g, " ")}</td>
+          <td class="num">${typeof v === "number" ? v.toLocaleString() : v}${unitOf(k) ? ` <span class="unit">${unitOf(k)}</span>` : ""}</td>
+          <td class="num muted">${prev !== undefined ? prev.toLocaleString() : "—"}</td>
+          <td class="num">${delta}</td>
+        </tr>`;
+      })
+      .join("");
+
+  const groups = groupByPrinciple(secs)
+    .map(
+      ([principle, group]) => `
+      <h2>${principle}</h2>
+      ${group
+        .map(
+          (sec) => `
+        <h3>${sec.sourceName} <span class="owner">· ${sec.department} · Data owner: ${sec.owner}</span></h3>
+        <table>
+          <thead><tr><th>KPI</th><th class="num">FY26</th><th class="num">FY25</th><th class="num">YoY</th></tr></thead>
+          <tbody>${kpiRows(sec)}</tbody>
+        </table>
+        ${sec.note ? `<p class="note">✎ ${sec.note}</p>` : ""}`
+        )
+        .join("")}`
+    )
+    .join("");
+
+  const assuranceTxt =
+    rep.assurance === "reasonable"
+      ? "The KPIs disclosed above were subjected to reasonable assurance by an independent third-party assurance provider across all locations, covering a sample of more than 90% of reported data."
+      : rep.assurance === "limited"
+        ? "The KPIs disclosed above were subjected to limited assurance by an independent third-party assurance provider."
+        : rep.assurance === "internal"
+          ? "The KPIs disclosed above were internally assessed by Group Sustainability together with the respective department SPOCs prior to publication."
+          : "";
+
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${rep.name}</title>
+  <style>
+    @page { margin: 22mm 18mm; }
+    body { font-family: Georgia, 'Times New Roman', serif; color: #1a202c; font-size: 12px; line-height: 1.5; }
+    .letterhead { text-transform: uppercase; letter-spacing: 2.5px; font-size: 9px; color: #64748b; }
+    h1 { font-size: 22px; margin: 6px 0 2px; }
+    .meta { color: #475569; font-size: 11px; margin: 0 0 4px; }
+    .rule { border: none; border-top: 2.5px solid #1a202c; margin: 14px 0 18px; }
+    .glance { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .glance td { border: 1px solid #cbd5e1; text-align: center; padding: 8px 4px; width: 25%; }
+    .glance .v { font-size: 18px; font-weight: bold; }
+    .glance .l { font-size: 8.5px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; }
+    h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #3d5a99; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin: 22px 0 8px; page-break-after: avoid; }
+    h3 { font-size: 12.5px; margin: 12px 0 5px; page-break-after: avoid; }
+    .owner { font-weight: normal; font-size: 10px; color: #64748b; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 6px; page-break-inside: avoid; }
+    th, td { border: 1px solid #d7dde6; padding: 5px 9px; text-align: left; text-transform: capitalize; }
+    th { background: #f1f5f9; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.8px; color: #475569; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .unit { font-size: 9px; color: #94a3b8; }
+    .muted { color: #94a3b8; }
+    .note { font-size: 10.5px; color: #92600a; background: #fef8e7; border: 1px solid #f2dfa9; padding: 5px 9px; margin: 4px 0 10px; }
+    .assurance { margin-top: 24px; border: 1px solid #c3cbe8; background: #f4f6fc; padding: 10px 14px; font-size: 10.5px; page-break-inside: avoid; }
+    .assurance b { text-transform: uppercase; letter-spacing: 1px; font-size: 9px; color: #3d5a99; display: block; margin-bottom: 3px; }
+    .sign { margin-top: 34px; page-break-inside: avoid; }
+    .sign .line { border-top: 1px solid #1a202c; width: 220px; padding-top: 5px; font-size: 10.5px; }
+  </style></head><body>
+    <div class="letterhead">RNGalla Family Private Limited · AREPL (Galla Foods)</div>
+    <h1>${rep.name}</h1>
+    <p class="meta">Reporting period: FY26 (Apr '25 to Mar '26)${rep.regulation ? ` · Prepared under ${rep.regulation}` : ""}</p>
+    <p class="meta">${rep.status === "generated" ? "Status: COMPLETE — all sources collected, validated and reconciled" : `Status: PARTIAL — ${rep.gaps?.length ?? 0} gap(s) explicitly disclosed`}</p>
+    <hr class="rule" />
+    <table class="glance"><tr>
+      <td><div class="v">${kpis}</div><div class="l">KPIs disclosed</div></td>
+      <td><div class="v">${depts}</div><div class="l">Functions covered</div></td>
+      <td><div class="v">${secs.filter((s) => s.note).length}</div><div class="l">Human corrections</div></td>
+      <td><div class="v">${rep.gaps?.length ?? 0}</div><div class="l">Gaps disclosed</div></td>
+    </tr></table>
+    ${rep.gaps?.length ? `<p class="note"><b>Known gaps:</b> ${rep.gaps.join(" · ")}</p>` : ""}
+    ${groups}
+    ${assuranceTxt ? `<div class="assurance"><b>Assurance statement</b>${assuranceTxt}</div>` : ""}
+    <div class="sign"><div class="line">${rep.signedBy ? `Digitally signed and released by <b>${rep.signedBy}</b>` : "Authorized signatory"}<br/>RNGalla Family Private Limited</div></div>
+  </body></html>`;
+
+  // Hidden same-origin iframe avoids popup blockers; print() opens the Save-as-PDF dialog.
+  const frame = document.createElement("iframe");
+  frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;";
+  document.body.appendChild(frame);
+  const doc = frame.contentWindow!.document;
+  doc.open();
+  doc.write(html);
+  doc.close();
+  setTimeout(() => {
+    frame.contentWindow!.focus();
+    frame.contentWindow!.print();
+    setTimeout(() => frame.remove(), 2000);
+  }, 300);
 }
 
 /** Infer a display unit from the KPI field name. */
@@ -126,7 +216,7 @@ export function Reports({ reportId }: { reportId: string }) {
                 </span>
               )}
               <button
-                onClick={() => printReport(rep.id, rep.name)}
+                onClick={() => printReport(rep)}
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-slate-300 bg-white/70 text-slate-600 hover:text-slate-900 hover:border-slate-400 transition-colors"
               >
                 ⬇ Download PDF

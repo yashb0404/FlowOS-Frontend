@@ -301,8 +301,11 @@ function SourceRow({ src, tick, repName }: { src: DataSource; tick: number; repN
             {src.label.replace("Data ", "D")}
           </span>
           <div>
-            <div className="font-medium text-slate-800 text-[13px]">
-              {src.name} <span className="text-slate-300 text-[10px]">{showSheet ? "▾" : "▸"}</span>
+            <div className="font-medium text-slate-800 text-[13px] flex items-center gap-2">
+              {src.name}
+              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${showSheet ? "bg-emerald-600 text-white border-emerald-600" : "bg-emerald-50 text-emerald-700 border-emerald-300"}`}>
+                ▦ {showSheet ? "Hide sheet" : "Excel sheet"}
+              </span>
             </div>
             <div className="text-[10.5px] text-slate-400">{src.principle ?? src.label}</div>
           </div>
