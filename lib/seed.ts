@@ -150,3 +150,16 @@ export const erpSnapshot: Record<string, Record<string, number>> = {
   "ds-23": { scope1_q1_tco2e: 760, scope2_q1_tco2e: 1310 },
   "ds-24": { incidents_q1: 1, near_misses_q1: 6 },
 };
+
+/** FY25 comparatives (from the prior-year BRSR/SR) for year-on-year deltas in generated reports. */
+export const priorYearData: Record<string, number> = {
+  board_meetings_held: 5, independent_directors_pct: 50, turnover_cr: 761, csr_spend_pct: 2.0,
+  ghg_scope1_tco2e: 3390, ghg_scope2_tco2e: 5720, total_employees: 1378, training_coverage_pct: 78,
+  csr_projects: 12, beneficiaries: 41000, consumer_complaints: 45, complaints_resolved_pct: 94,
+  msme_sourcing_pct: 27, local_sourcing_pct: 61, ltifr: 0.6, safety_incidents: 6,
+  energy_consumed_gj: 152400, renewable_energy_pct: 18, data_breaches: 0, privacy_complaints: 2,
+  material_topics: 12, stakeholders_engaged: 180, water_withdrawal_kl: 98200, waste_recycled_pct: 71,
+  women_workforce_pct: 24, grievances_resolved: 9, ethics_trainings: 7, policy_updates: 3,
+  incident_reports_count: 6, manhours_lakhs: 29, projects_completed: 9, ongoing_projects: 5,
+  csr_obligation_lakhs: 152, csr_spent_lakhs: 155, projects_assessed: 4, impact_score: 7,
+};

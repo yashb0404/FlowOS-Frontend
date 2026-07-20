@@ -3,6 +3,37 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { Report, ReportSection } from "@/lib/types";
+import { priorYearData } from "@/lib/seed";
+
+/** Infer a display unit from the KPI field name. */
+function unitOf(field: string): string {
+  if (field.endsWith("_pct")) return "%";
+  if (field.includes("tco2e")) return "tCO₂e";
+  if (field.endsWith("_cr")) return "₹ Cr";
+  if (field.endsWith("_lakhs")) return "₹ lakh";
+  if (field.endsWith("_gj")) return "GJ";
+  if (field.endsWith("_kl")) return "KL";
+  if (field === "ltifr") return "per mn hrs";
+  return "";
+}
+
+/** Year-on-year delta chip vs FY25, when a comparative exists. */
+function Delta({ field, value }: { field: string; value: number | string }) {
+  const prev = priorYearData[field];
+  const cur = Number(value);
+  if (prev === undefined || Number.isNaN(cur)) return null;
+  if (prev === 0) return <span className="text-[9.5px] text-slate-400">FY25: {prev}</span>;
+  const pct = ((cur - prev) / prev) * 100;
+  const arrow = pct > 0.05 ? "▲" : pct < -0.05 ? "▼" : "▬";
+  return (
+    <span className="text-[9.5px] text-slate-400">
+      FY25: {prev.toLocaleString()}{" "}
+      <span className={pct > 0.05 ? "text-[#3d5a99] font-semibold" : pct < -0.05 ? "text-rose-500 font-semibold" : "text-slate-400"}>
+        {arrow} {Math.abs(pct).toFixed(1)}%
+      </span>
+    </span>
+  );
+}
 
 /** Group report sections under their framework principle, preserving order. */
 function groupByPrinciple(sections: ReportSection[]): [string, ReportSection[]][] {
@@ -91,6 +122,28 @@ export function Reports({ reportId }: { reportId: string }) {
             </div>
           )}
 
+          {/* At a glance */}
+          <div className="mx-8 mt-5 grid grid-cols-2 md:grid-cols-4 gap-2.5">
+            {(() => {
+              const secs = rep.sections ?? [];
+              const kpis = secs.reduce((n, s) => n + Object.keys(s.values).length, 0);
+              const depts = new Set(secs.map((s) => s.department)).size;
+              const corrections = secs.filter((s) => s.note).length;
+              const gaps = rep.gaps?.length ?? 0;
+              return [
+                { l: "KPIs disclosed", v: kpis, tone: "text-slate-900" },
+                { l: "Functions covered", v: depts, tone: "text-[#3d5a99]" },
+                { l: "Human corrections", v: corrections, tone: corrections > 0 ? "text-amber-600" : "text-slate-900" },
+                { l: "Gaps disclosed", v: gaps, tone: gaps > 0 ? "text-rose-600" : "text-emerald-600" },
+              ].map((s) => (
+                <div key={s.l} className="glass-soft rounded-xl px-3.5 py-2.5 text-center">
+                  <div className={`text-xl font-bold tabular-nums ${s.tone}`}>{s.v}</div>
+                  <div className="text-[9.5px] uppercase tracking-wider text-slate-400 font-semibold mt-0.5">{s.l}</div>
+                </div>
+              ));
+            })()}
+          </div>
+
           {/* Disclosures grouped by framework principle — Section C style */}
           <div className="px-8 py-6 flex flex-col gap-6">
             {groupByPrinciple(rep.sections ?? []).map(([principle, secs]) => (
@@ -118,7 +171,11 @@ export function Reports({ reportId }: { reportId: string }) {
                             <div className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
                               {k.replace(/_/g, " ")}
                             </div>
-                            <div className="text-xl font-bold tabular-nums text-slate-900 mt-0.5">{v}</div>
+                            <div className="text-xl font-bold tabular-nums text-slate-900 mt-0.5">
+                              {typeof v === "number" ? v.toLocaleString() : v}
+                              {unitOf(k) && <span className="text-[10.5px] font-medium text-slate-400 ml-1">{unitOf(k)}</span>}
+                            </div>
+                            <Delta field={k} value={v} />
                           </div>
                         ))}
                       </div>
