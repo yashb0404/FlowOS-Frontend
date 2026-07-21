@@ -9,6 +9,7 @@ import { Review } from "./Review";
 import { ActivityFeed } from "./ActivityFeed";
 import { Reports } from "./Reports";
 import { FlowDiagram } from "./FlowDiagram";
+import { BrsrDocument } from "./BrsrDocument";
 
 export const WORKSPACE_TABS = [
   { key: "dashboard", label: "Collection Dashboard", icon: "◧" },
@@ -16,6 +17,7 @@ export const WORKSPACE_TABS = [
   { key: "comms", label: "Communications", icon: "✉" },
   { key: "review", label: "Review", icon: "⚖" },
   { key: "activity", label: "Agent Activity", icon: "⌁" },
+  { key: "qa", label: "Q&A Data Book", icon: "❓" },
   { key: "reports", label: "Generated Report", icon: "▦" },
 ] as const;
 
@@ -27,6 +29,7 @@ const TAB_SUBS: Record<WorkspaceTabKey, string> = {
   comms: "Every follow-up email and Teams alert sent for this report — exactly as recipients see them.",
   review: "Flags for this report land here. Approve, override, or force-generate with gaps — every decision is audited.",
   activity: "The complete, auditable trail of everything the agents did for this report.",
+  qa: "Each department's BRSR questions, answered straight from its submitted sheet — the raw material for the report.",
   reports: "Built from the template the moment this report's generation gate opens — never before.",
 };
 
@@ -165,6 +168,7 @@ export function Workspace({
           {tab === "comms" && <Communications reportId={active.id} />}
           {tab === "review" && <Review reportId={active.id} />}
           {tab === "activity" && <ActivityFeed reportId={active.id} />}
+          {tab === "qa" && <BrsrDocument reportId={active.id} />}
           {tab === "reports" && <Reports reportId={active.id} />}
         </div>
       </div>
