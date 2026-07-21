@@ -134,12 +134,14 @@ function Rbac() {
                     <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#3d5a99] to-[#7ca982] flex items-center justify-center text-[9px] font-bold text-white shrink-0">
                       {p.email.slice(0, 2).toUpperCase()}
                     </span>
-                    <span className="text-[12.5px] text-slate-700 font-mono">{p.email}</span>
+                    <span className="text-[12.5px] text-slate-700">{p.email}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-[12.5px] text-slate-600">{p.role}</td>
                 <td className="px-4 py-3">
-                  <span className="text-[11px] px-2 py-0.5 rounded-md glass-soft text-slate-500 font-mono">{p.scope}</span>
+                  <span className="inline-block text-[11px] px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-[#3d5a99] font-medium whitespace-nowrap">
+                    {p.scope}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button className="text-slate-300 hover:text-rose-500 transition-colors text-sm" title="Remove">
