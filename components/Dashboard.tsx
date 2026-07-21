@@ -69,8 +69,8 @@ export function Dashboard({ reportId }: { reportId: string }) {
       </div>
 
       {/* ── Trend + department compliance ── */}
-      <div className="grid lg:grid-cols-3 gap-3">
-        <div className="glass rounded-xl p-4 lg:col-span-2 fade-up fade-up-1">
+      <div className="grid lg:grid-cols-3 gap-3 items-stretch">
+        <div className="glass rounded-xl p-4 lg:col-span-2 fade-up fade-up-1 flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <div>
               <h3 className="text-[12.5px] font-semibold text-slate-800">Submission Surveillance</h3>
@@ -80,22 +80,33 @@ export function Dashboard({ reportId }: { reportId: string }) {
               Days {chartStart}&ndash;{chartEnd}
             </span>
           </div>
-          <TrendChart perDay={perDay} baseline={baseline} startDay={chartStart} max={repSources.length} />
+          <div className="flex-1 flex items-center min-h-[150px]">
+            <TrendChart perDay={perDay} baseline={baseline} startDay={chartStart} max={repSources.length} />
+          </div>
         </div>
         <div className="glass rounded-xl p-4 fade-up fade-up-2">
-          <h3 className="text-[12.5px] font-semibold text-slate-800 mb-0.5">Department Compliance</h3>
-          <p className="text-[10px] text-slate-400 mb-3">Sources submitted vs required</p>
-          <div className="flex flex-col gap-2.5">
+          <div className="flex items-baseline justify-between mb-3">
+            <div>
+              <h3 className="text-[12.5px] font-semibold text-slate-800">Department Compliance</h3>
+              <p className="text-[10px] text-slate-400">Sources submitted vs required</p>
+            </div>
+            <span className="text-[10px] font-bold tabular-nums text-slate-500">
+              {byDept.filter(([, v]) => v.done === v.total).length}/{byDept.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {byDept.map(([dept, v]) => {
               const pct = Math.round((v.done / v.total) * 100);
+              const tone = pct === 100 ? "text-emerald-600" : pct > 0 ? "text-amber-600" : "text-rose-500";
+              const bar = pct === 100 ? "bg-emerald-500" : pct > 0 ? "bg-amber-400" : "bg-rose-300";
               return (
-                <div key={dept}>
-                  <div className="flex justify-between text-[10.5px] mb-1">
-                    <span className="text-slate-600 font-medium">{dept}</span>
-                    <span className={`font-bold tabular-nums ${pct === 100 ? "text-emerald-600" : pct >= 50 ? "text-amber-600" : "text-rose-500"}`}>{pct}%</span>
+                <div key={dept} className="min-w-0">
+                  <div className="flex justify-between items-center gap-1 text-[10px] mb-0.5">
+                    <span className="text-slate-600 font-medium truncate" title={dept}>{dept}</span>
+                    <span className={`font-bold tabular-nums shrink-0 ${tone}`}>{pct}%</span>
                   </div>
-                  <div className="progress-track h-1.5">
-                    <div className="progress-fill" style={{ width: `${pct}%` }} />
+                  <div className="h-1 rounded-full bg-slate-100 overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-500 ${bar}`} style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );
@@ -338,7 +349,7 @@ function Kpi({ label, value, note, tone, icon, delay }: { label: string; value: 
 
 function TrendChart({ perDay, baseline, startDay, max }: { perDay: number[]; baseline: number; startDay: number; max: number }) {
   const W = 340;
-  const H = 96;
+  const H = 130;
   const PAD = 16;
   const n = perDay.length;
   const slot = (W - PAD * 2) / n;
@@ -353,7 +364,7 @@ function TrendChart({ perDay, baseline, startDay, max }: { perDay: number[]; bas
   const labelStep = Math.max(1, Math.ceil(n / 8));
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 110 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 150 }} preserveAspectRatio="xMidYMid meet">
       {/* target line */}
       <line x1={PAD} y1={y(max)} x2={W - PAD} y2={y(max)} stroke="rgba(214,58,95,0.35)" strokeWidth="1" strokeDasharray="3 3" />
       <text x={W - PAD} y={y(max) - 3} textAnchor="end" fontSize="7.5" fill="#d63a5f">
