@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useStore } from "@/lib/store";
 import { questionsFor } from "@/lib/brsrQuestions";
+import { departmentReport } from "@/lib/brsrReport";
 import { BrsrQuestion, DataSource } from "@/lib/types";
 
 /** Build the Q&A list for a department — real BRSR questions, or a fallback from its KPI fields. */
@@ -98,10 +99,41 @@ export function BrsrDocument({ reportId }: { reportId: string }) {
         </div>
       </div>
 
+      {/* compiled department report — the written-up section from the answers */}
+      <div className="glass rounded-2xl overflow-hidden">
+        <div className="px-6 py-3 border-b border-slate-200/70 bg-gradient-to-r from-emerald-50/60 via-transparent to-transparent flex items-center gap-2">
+          <span className="text-[13px]">📄</span>
+          <h3 className="text-[13.5px] font-semibold text-slate-900">Compiled Department Report — {dept.department}</h3>
+          <span className="ml-auto text-[9.5px] uppercase tracking-wider font-semibold text-slate-400">
+            auto-drafted from answers
+          </span>
+        </div>
+        <div className="px-6 py-5">
+          {answered ? (
+            <div className="max-w-3xl" style={{ fontFamily: "Georgia, serif" }}>
+              {departmentReport(dept.department, qa).map((para, i) => (
+                <p key={i} className="text-[13px] text-slate-700 leading-relaxed mb-3">
+                  {para}
+                </p>
+              ))}
+              {dept.evidence && dept.evidence.length > 0 && (
+                <p className="text-[11px] text-slate-400 mt-2">
+                  Supporting evidence on file: {dept.evidence.map((e) => `📎 ${e}`).join("  ")}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-[12.5px] italic text-slate-400">
+              This section will be compiled automatically once {dept.owner} submits the {dept.department} data sheet.
+            </p>
+          )}
+        </div>
+      </div>
+
       <p className="text-[11.5px] text-slate-400 px-1">
         Each department answers a focused set of BRSR questions; answers are pulled straight from its submitted Excel
-        sheet. Advance the simulation (or upload a sheet) to watch a department&rsquo;s answers fill in. These Q&amp;A
-        blocks compile into each department&rsquo;s report, and then the full BRSR document.
+        sheet and auto-drafted into the compiled section above. Advance the simulation (or upload a sheet) to watch a
+        department fill in. These sections then assemble into the full BRSR document.
       </p>
     </div>
   );
