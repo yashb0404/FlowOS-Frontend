@@ -36,11 +36,17 @@ export function Dashboard({ reportId }: { reportId: string }) {
   const progress = reportProgress(rep, sources);
   const rs = REPORT_STATUS[rep.status];
 
-  // Window the chart to the interesting period: last submission + 2 days, min 6.
-  const lastSubmitDay = Math.max(0, ...repEvents.filter((e) => e.kind === "submitted").map((e) => e.timestamp));
-  const windowEnd = Math.max(6, Math.min(Math.max(tick, 1), lastSubmitDay + 2));
-  const perDay = Array.from({ length: windowEnd + 1 }, (_, d) =>
-    repEvents.filter((e) => e.kind === "submitted" && e.timestamp === d).length
+  // Window the chart tightly around THIS report's activity window (its sources
+  // submit in a specific date range on the FY26 calendar, not from Day 0).
+  const submitDays = repEvents.filter((e) => e.kind === "submitted").map((e) => e.timestamp);
+  const minDue = Math.min(...repSources.map((s) => s.dueTick));
+  const firstActivity = submitDays.length ? Math.min(...submitDays, minDue) : minDue;
+  const lastSubmit = submitDays.length ? Math.max(...submitDays) : minDue;
+  const chartStart = Math.max(0, firstActivity - 2);
+  const chartEnd = Math.max(chartStart + 8, Math.min(lastSubmit + 2, Math.max(tick, lastSubmit)));
+  const baseline = repEvents.filter((e) => e.kind === "submitted" && e.timestamp < chartStart).length;
+  const perDay = Array.from({ length: chartEnd - chartStart + 1 }, (_, k) =>
+    repEvents.filter((e) => e.kind === "submitted" && e.timestamp === chartStart + k).length
   );
 
   const byDept = Object.entries(
@@ -68,11 +74,13 @@ export function Dashboard({ reportId }: { reportId: string }) {
           <div className="flex items-center justify-between mb-2">
             <div>
               <h3 className="text-[12.5px] font-semibold text-slate-800">Submission Surveillance</h3>
-              <p className="text-[10px] text-slate-400">Cumulative sources received per simulated day</p>
+              <p className="text-[10px] text-slate-400">Daily submissions + cumulative, across this report&rsquo;s collection window</p>
             </div>
-            <span className="text-[9.5px] px-2 py-0.5 rounded-full glass-soft text-slate-500">Day {tick}</span>
+            <span className="text-[9.5px] px-2 py-0.5 rounded-full glass-soft text-slate-500">
+              Days {chartStart}&ndash;{chartEnd}
+            </span>
           </div>
-          <TrendChart perDay={perDay} max={repSources.length} />
+          <TrendChart perDay={perDay} baseline={baseline} startDay={chartStart} max={repSources.length} />
         </div>
         <div className="glass rounded-xl p-4 fade-up fade-up-2">
           <h3 className="text-[12.5px] font-semibold text-slate-800 mb-0.5">Department Compliance</h3>
@@ -188,51 +196,48 @@ function Kpi({ label, value, note, tone, icon, delay }: { label: string; value: 
   );
 }
 
-function TrendChart({ perDay, max }: { perDay: number[]; max: number }) {
+function TrendChart({ perDay, baseline, startDay, max }: { perDay: number[]; baseline: number; startDay: number; max: number }) {
   const W = 340;
   const H = 96;
-  const PAD = 14;
+  const PAD = 16;
   const n = perDay.length;
   const slot = (W - PAD * 2) / n;
   const denom = Math.max(max, 1);
-  const cum = perDay.reduce<number[]>((acc, v) => [...acc, (acc[acc.length - 1] ?? 0) + v], []);
+  const cum = perDay.reduce<number[]>((acc, v, i) => {
+    acc.push((i === 0 ? baseline : acc[i - 1]) + v);
+    return acc;
+  }, []);
   const y = (v: number) => H - 18 - (v / denom) * (H - 34);
-  const pts = cum.map((v, i) => `${PAD + i * slot + slot / 2},${y(v)}`);
+  const cx = (i: number) => PAD + i * slot + slot / 2;
+  const pts = cum.map((v, i) => `${cx(i)},${y(v)}`);
+  const labelStep = Math.max(1, Math.ceil(n / 8));
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 110 }}>
-      {/* daily submission bars */}
-      {perDay.map((v, i) => (
-        <rect
-          key={i}
-          x={PAD + i * slot + slot * 0.25}
-          y={v > 0 ? y(v) : H - 18}
-          width={slot * 0.5}
-          height={v > 0 ? H - 18 - y(v) : 0}
-          rx={1.5}
-          fill="rgba(61,90,153,0.25)"
-        />
-      ))}
-      {/* cumulative line */}
-      <polyline points={pts.join(" ")} fill="none" stroke="#3d5a99" strokeWidth="2" strokeLinejoin="round" />
-      {cum.map((v, i) =>
-        perDay[i] > 0 ? <circle key={i} cx={PAD + i * slot + slot / 2} cy={y(v)} r="2.5" fill="#3d5a99" /> : null
-      )}
-      <circle cx={PAD + (n - 1) * slot + slot / 2} cy={y(cum[n - 1])} r="3.5" fill="#d63a5f" />
-      {/* baseline + day labels */}
-      <line x1={PAD} y1={H - 18} x2={W - PAD} y2={H - 18} stroke="rgba(100,116,139,0.25)" strokeWidth="1" />
-      {perDay.map((_, i) =>
-        i % Math.ceil(n / 8) === 0 ? (
-          <text key={i} x={PAD + i * slot + slot / 2} y={H - 6} textAnchor="middle" fontSize="7.5" fill="#94a3b8">
-            D{i}
-          </text>
-        ) : null
-      )}
       {/* target line */}
       <line x1={PAD} y1={y(max)} x2={W - PAD} y2={y(max)} stroke="rgba(214,58,95,0.35)" strokeWidth="1" strokeDasharray="3 3" />
       <text x={W - PAD} y={y(max) - 3} textAnchor="end" fontSize="7.5" fill="#d63a5f">
         target {max}
       </text>
+      {/* daily submission bars */}
+      {perDay.map((v, i) =>
+        v > 0 ? (
+          <rect key={i} x={cx(i) - slot * 0.25} y={y(v)} width={slot * 0.5} height={H - 18 - y(v)} rx={1.5} fill="rgba(61,90,153,0.28)" />
+        ) : null
+      )}
+      {/* cumulative line */}
+      <polyline points={pts.join(" ")} fill="none" stroke="#3d5a99" strokeWidth="2" strokeLinejoin="round" />
+      {cum.map((v, i) => (perDay[i] > 0 ? <circle key={i} cx={cx(i)} cy={y(v)} r="2.5" fill="#3d5a99" /> : null))}
+      {cum[n - 1] > 0 && <circle cx={cx(n - 1)} cy={y(cum[n - 1])} r="3.5" fill="#d63a5f" />}
+      {/* baseline + real calendar-day labels */}
+      <line x1={PAD} y1={H - 18} x2={W - PAD} y2={H - 18} stroke="rgba(100,116,139,0.25)" strokeWidth="1" />
+      {perDay.map((_, i) =>
+        i % labelStep === 0 ? (
+          <text key={i} x={cx(i)} y={H - 6} textAnchor="middle" fontSize="7.5" fill="#94a3b8">
+            D{startDay + i}
+          </text>
+        ) : null
+      )}
     </svg>
   );
 }
