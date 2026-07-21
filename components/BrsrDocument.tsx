@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useStore } from "@/lib/store";
-import { questionsFor } from "@/lib/brsrQuestions";
+import { questionsForSource } from "@/lib/brsrQuestions";
 import { departmentReport } from "@/lib/brsrReport";
+import { buildFullReportHtml, printHtml } from "@/lib/fullReport";
 import { BrsrQuestion, DataSource } from "@/lib/types";
 
-/** Build the Q&A list for a department — real BRSR questions, or a fallback from its KPI fields. */
+/** Build the Q&A list for a department — real questions, or a fallback from its KPI fields. */
 function qaFor(src: DataSource): BrsrQuestion[] {
-  const real = questionsFor(src.department);
+  const real = questionsForSource(src);
   if (real.length) return real;
   return src.expectedFields.map((f, i) => ({
     code: `Q${i + 1}`,
@@ -31,8 +32,26 @@ export function BrsrDocument({ reportId }: { reportId: string }) {
   const qa = qaFor(dept);
   const answered = dept.status === "submitted";
 
+  const submittedCount = repSources.filter((s) => s.status === "submitted").length;
+
   return (
     <div className="flex flex-col gap-4">
+      {/* assemble full document */}
+      <div className="glass rounded-2xl px-5 py-3.5 flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h3 className="text-[13px] font-semibold text-slate-900">📖 Full {rep.name} document</h3>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Cover · contents · {repSources.length} department sections (Q&amp;A + compiled disclosure) — {submittedCount}/{repSources.length} ready.
+          </p>
+        </div>
+        <button
+          onClick={() => printHtml(buildFullReportHtml(rep, sources))}
+          className="btn-primary px-4 py-2 text-[12.5px] rounded-xl text-white font-semibold whitespace-nowrap"
+        >
+          ⬇ Assemble &amp; download PDF
+        </button>
+      </div>
+
       {/* department selector — like an index of chapters */}
       <div className="flex flex-wrap gap-1.5">
         {repSources.map((s, i) => (

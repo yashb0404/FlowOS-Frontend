@@ -1,4 +1,4 @@
-import { BrsrQuestion } from "./types";
+import { BrsrQuestion, DataSource } from "./types";
 
 /**
  * BRSR question sets per AREPL department, generated from the real FY25 BRSR
@@ -83,7 +83,78 @@ export const BRSR_QUESTIONS: Record<string, BrsrQuestion[]> = {
   ],
 };
 
+/**
+ * Question banks for the OTHER reports' sources (Sustainability/GRI, BRSR Core
+ * assurance, CSR, ESG data book), keyed by source id because these reports
+ * reuse department names (Sustainability, Energy, HR…) with different indicators.
+ */
+export const QUESTIONS_BY_SOURCE: Record<string, BrsrQuestion[]> = {
+  // Report 2 — Sustainability Report (GRI)
+  "ds-11": [
+    { code: "GRI 3-1", section: "C", text: "Number of material topics identified through the assessment", answer: 14 },
+    { code: "GRI 3-1", section: "C", text: "Number of stakeholders engaged during materiality assessment", answer: 220 },
+    { code: "GRI 2-29", section: "C", text: "Is there a formal stakeholder engagement approach in place?", answer: "Yes" },
+  ],
+  "ds-12": [
+    { code: "GRI 303-3", section: "C", text: "Total water withdrawal across all sources", answer: 96400, unit: "KL" },
+    { code: "GRI 306-4", section: "C", text: "Percentage of waste diverted from disposal (recycled)", answer: 78, unit: "%" },
+    { code: "GRI 302-1", section: "C", text: "Is energy consumption within the organization tracked and reported?", answer: "Yes" },
+  ],
+  "ds-13": [
+    { code: "GRI 405-1", section: "C", text: "Percentage of women in the total workforce", answer: 27, unit: "%" },
+    { code: "GRI 406-1", section: "C", text: "Number of grievances filed and resolved during the year", answer: 12 },
+  ],
+  "ds-14": [
+    { code: "GRI 2-16", section: "C", text: "Number of ethics / code-of-conduct trainings conducted", answer: 9 },
+    { code: "GRI 2-23", section: "C", text: "Number of policy commitments reviewed or updated", answer: 4 },
+  ],
+  // Report 3 — BRSR Core assurance evidence
+  "ds-15": [
+    { code: "Core A1", section: "C", text: "Number of utility invoices on file supporting energy data", answer: 12 },
+    { code: "Core A1", section: "C", text: "Months of continuous meter logs available for assurance", answer: 12 },
+  ],
+  "ds-16": [
+    { code: "Core A4", section: "C", text: "Number of incident reports (Form 27) filed during the year", answer: 5 },
+    { code: "Core A4", section: "C", text: "Total man-hours worked during the reporting period", answer: 31, unit: "lakh" },
+  ],
+  "ds-17": [
+    { code: "Core A3", section: "C", text: "Provident Fund coverage of eligible employees", answer: 100, unit: "%" },
+    { code: "Core A3", section: "C", text: "Months of wage records available for assurance sampling", answer: 12 },
+  ],
+  // Report 4 — CSR Annual Report (Companies Act §135)
+  "ds-19": [
+    { code: "§135", section: "C", text: "Number of CSR projects completed during the year", answer: 11 },
+    { code: "§135", section: "C", text: "Number of CSR projects ongoing at year end", answer: 4 },
+  ],
+  "ds-20": [
+    { code: "§135(5)", section: "C", text: "CSR obligation for the year (2% of average net profit)", answer: 168, unit: "₹ lakh" },
+    { code: "§135(5)", section: "C", text: "Actual amount spent on CSR during the year", answer: 176, unit: "₹ lakh" },
+  ],
+  "ds-21": [
+    { code: "Rule 8(3)", section: "C", text: "Number of projects covered by Social Impact Assessment", answer: 6 },
+    { code: "Rule 8(3)", section: "C", text: "Average impact assessment score (out of 10)", answer: 8 },
+  ],
+  // Report 5 — ESG Data Book Q1
+  "ds-22": [
+    { code: "ESG-E1", section: "C", text: "Total energy consumed in Q1", answer: 36900, unit: "GJ" },
+    { code: "ESG-E2", section: "C", text: "Total water consumed in Q1", answer: 22400, unit: "KL" },
+  ],
+  "ds-23": [
+    { code: "ESG-C1", section: "C", text: "Scope 1 GHG emissions for Q1", answer: 760, unit: "tCO₂e" },
+    { code: "ESG-C2", section: "C", text: "Scope 2 GHG emissions for Q1", answer: 1310, unit: "tCO₂e" },
+  ],
+  "ds-24": [
+    { code: "ESG-S1", section: "C", text: "Number of safety incidents recorded in Q1", answer: 1 },
+    { code: "ESG-S2", section: "C", text: "Number of near-misses reported in Q1", answer: 6 },
+  ],
+};
+
 /** Convenience: questions for a department, or [] if none defined. */
 export function questionsFor(department: string): BrsrQuestion[] {
   return BRSR_QUESTIONS[department] ?? [];
+}
+
+/** Questions for a specific source: by-source bank → department bank → []. */
+export function questionsForSource(src: DataSource): BrsrQuestion[] {
+  return QUESTIONS_BY_SOURCE[src.id] ?? BRSR_QUESTIONS[src.department] ?? [];
 }
