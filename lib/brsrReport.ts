@@ -12,7 +12,36 @@ const fmt = (q?: BrsrQuestion) =>
 export function departmentReport(department: string, qa: BrsrQuestion[]): string[] {
   const by = Object.fromEntries(qa.map((q) => [q.code, q])) as Record<string, BrsrQuestion>;
   const v = (code: string) => fmt(by[code]);
+  const has = (code: string) => by[code] !== undefined;
   const ENTITY = "RN Galla Family Pvt. Ltd. (Galla Foods)";
+
+  // Bespoke BRSR prose only when this department's signature indicators are present;
+  // the other reports (GRI, CSR, assurance, ESG) reuse department names with
+  // different questions, so they fall through to the generic narrative below.
+  const SIGNATURE: Record<string, string> = {
+    "Company Secretary": "P1 Q1",
+    Finance: "A.17",
+    Sustainability: "P6 Q1",
+    HR: "A.20",
+    CSR: "P8 Q5",
+    Marketing: "P9 Q1",
+    Procurement: "P2 Q4",
+    HSE: "P3 Q11",
+    Energy: "P6 Q1a",
+    IT: "P9 Q9",
+  };
+  const bespoke = SIGNATURE[department] !== undefined && has(SIGNATURE[department]);
+
+  if (!bespoke) {
+    if (qa.length === 0) return [`Disclosures for ${department} will be compiled once its data sheet is submitted.`];
+    const items = qa
+      .map((q) => `${q.text.replace(/\?$/, "").replace(/^(Is |Does |Are )/, (m) => m.toLowerCase()).replace(/\.$/, "")} — ${fmt(q)}`)
+      .join("; ");
+    return [
+      `For the reporting period (FY26), ${ENTITY} — ${department} function — disclosed the following against the applicable framework: ${items}.`,
+      `All figures above are drawn directly from the department's submitted data sheet and supporting evidence, and are carried forward into the consolidated report.`,
+    ];
+  }
 
   switch (department) {
     case "Company Secretary":
