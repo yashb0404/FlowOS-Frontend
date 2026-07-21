@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { QueryHub } from "./QueryHub";
 import { AdminPanel } from "./AdminPanel";
+import { Timeline } from "./Timeline";
 import { TopBar } from "./TopBar";
 import { ReportDeck } from "./ReportDeck";
 import { Workspace, WorkspaceTabKey, WORKSPACE_TABS } from "./Workspace";
@@ -11,6 +12,7 @@ import { useStore } from "@/lib/store";
 
 const NAV = [
   { key: "home", label: "Reports", icon: "▦", hint: "All report workspaces" },
+  { key: "timeline", label: "Program Timeline", icon: "⧗", hint: "FY26 assurance milestones" },
   { key: "query", label: "Ask FlowOS", icon: "✦", hint: "Knowledge agent Q&A" },
   { key: "settings", label: "Settings", icon: "⚙", hint: "Integrations · RBAC · audit" },
 ] as const;
@@ -19,6 +21,7 @@ type NavKey = (typeof NAV)[number]["key"];
 
 const TITLES: Record<NavKey, { title: string; sub: string }> = {
   home: { title: "Report Workspaces", sub: "Every card is an isolated report running the full agentic pipeline. Open one to work inside it; rename from its tab." },
+  timeline: { title: "Program Timeline", sub: "The AREPL FY26 BRSR & Sustainability assurance plan, running live against the simulation clock." },
   query: { title: "Ask FlowOS", sub: "Query everything the platform has collected across all reports — like chatting with your operations data." },
   settings: { title: "Platform Administration", sub: "Enterprise API tokens, connector toggles, user role scopes, and the tamper-evident security ledger." },
 };
@@ -187,6 +190,7 @@ export function Tabs() {
 
                 <div key={view} className="fade-up fade-up-1">
                   {view === "home" && <ReportDeck />}
+                  {view === "timeline" && <Timeline />}
                   {view === "query" && <QueryHub />}
                   {view === "settings" && <AdminPanel />}
                 </div>
