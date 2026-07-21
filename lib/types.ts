@@ -27,6 +27,15 @@ export interface Flag {
   resolvedValue?: number | string;
 }
 
+/** One BRSR disclosure question and its answer, as it appears in a department's sheet. */
+export interface BrsrQuestion {
+  code: string; // BRSR reference, e.g. "P6 Q7" or "A.11"
+  section: "A" | "B" | "C"; // General / Management & Process / Principle-wise
+  text: string; // the question exactly as asked in the BRSR format
+  answer: string | number; // the value the department reports
+  unit?: string;
+}
+
 export interface DataSource {
   id: string;
   reportId: string;
