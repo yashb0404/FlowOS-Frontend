@@ -104,6 +104,9 @@ export function Dashboard({ reportId }: { reportId: string }) {
         </div>
       </div>
 
+      {/* ── Live data workbook (Excel-style, always visible) ── */}
+      <LiveWorkbook sources={repSources} repName={rep.name} />
+
       <div className="glass rounded-2xl overflow-hidden fade-up fade-up-1">
         {/* report header */}
         <div className="px-6 py-4 border-b border-slate-200/70 bg-gradient-to-r from-rose-50/60 via-transparent to-transparent">
@@ -179,6 +182,143 @@ export function Dashboard({ reportId }: { reportId: string }) {
         +3. Submitted data flows through extraction → validation (&ldquo;N of N fields&rdquo;) → reconciliation vs the ERP snapshot; any
         flag routes to the <span className="text-slate-600 font-medium">Review</span> tab.
       </p>
+    </div>
+  );
+}
+
+/** Always-visible Excel-style workbook: one worksheet tab per SPOC, live cells. */
+function LiveWorkbook({ sources, repName }: { sources: DataSource[]; repName: string }) {
+  const { uploadSubmit } = useStore();
+  const [active, setActive] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const src = sources[active] ?? sources[0];
+  if (!src) return null;
+
+  const submitted = src.status === "submitted";
+
+  async function onFile(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const { fields } = await parseSheet(file, src.expectedFields);
+      if (Object.keys(fields).length === 0) setError("No expected KPIs matched in that file");
+      else uploadSubmit(src.id, file.name, fields);
+    } catch {
+      setError("Could not parse file");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  const TAB_TONE: Record<string, string> = {
+    submitted: "border-emerald-400 text-emerald-700",
+    human_alert: "border-rose-400 text-rose-600",
+    reminded: "border-amber-400 text-amber-700",
+    pending: "border-slate-300 text-slate-400",
+  };
+
+  return (
+    <div className="rounded-2xl overflow-hidden border border-emerald-800/25 shadow-lg fade-up fade-up-1">
+      {/* Excel title bar */}
+      <div className="bg-emerald-700 text-white px-4 py-2 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="bg-white/20 rounded px-1.5 py-0.5 text-[11px] font-bold">▦</span>
+          <span className="text-[12.5px] font-semibold truncate">
+            AREPL_BRSR_FY26_DataBook.xlsx <span className="font-normal text-emerald-100">— {sources.length} worksheets</span>
+          </span>
+        </div>
+        <span className="flex items-center gap-1.5 text-[10px] text-emerald-50 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-lime-300 pulse-glow" /> live
+        </span>
+      </div>
+
+      {/* toolbar */}
+      <div className="bg-emerald-50/70 border-b border-emerald-200 px-4 py-1.5 flex items-center justify-between gap-3">
+        <span className="text-[11px] text-emerald-900 font-medium truncate">
+          {src.name} · <span className="text-emerald-700/70">{src.owner} · {src.department}</span>
+        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          {error && <span className="text-[9.5px] text-rose-500">{error}</span>}
+          <input ref={inputRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
+          {!submitted && (
+            <button
+              onClick={() => inputRef.current?.click()}
+              disabled={busy}
+              className="text-[10.5px] font-semibold px-2.5 py-1 rounded border border-cyan-400 bg-white text-cyan-700 hover:bg-cyan-50 disabled:opacity-50"
+            >
+              {busy ? "⟳ parsing…" : "⇪ Upload filled sheet"}
+            </button>
+          )}
+          <button
+            onClick={() => downloadSheet(src, repName)}
+            className="text-[10.5px] font-semibold px-2.5 py-1 rounded border border-emerald-400 bg-white text-emerald-700 hover:bg-emerald-50"
+          >
+            ⬇ {submitted ? "Download" : "Blank template"} (.xlsx)
+          </button>
+        </div>
+      </div>
+
+      {/* spreadsheet grid */}
+      <div className="bg-white overflow-x-auto">
+        <table className="text-[11.5px] border-collapse w-full min-w-[520px]">
+          <thead>
+            <tr className="bg-slate-100 text-slate-500">
+              <th className="w-8 border border-slate-200 text-[9px] font-normal py-1"></th>
+              <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold text-slate-600">A · KPI</th>
+              <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold text-slate-600 w-32">B · FY26 Value</th>
+              <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold text-slate-600">C · Evidence Required</th>
+            </tr>
+          </thead>
+          <tbody>
+            {src.expectedFields.map((f, i) => {
+              const has = src.submittedFields && f in src.submittedFields;
+              return (
+                <tr key={f}>
+                  <td className="border border-slate-200 bg-slate-50 text-center text-[9px] text-slate-400 py-1">{i + 1}</td>
+                  <td className="border border-slate-200 px-3 py-1.5 text-slate-700 capitalize">{f.replace(/_/g, " ")}</td>
+                  <td className={`border border-slate-200 px-3 py-1.5 tabular-nums font-semibold ${has ? "text-slate-900 bg-emerald-50/40" : "text-slate-300 italic"}`}>
+                    {has ? src.submittedFields![f] : "—"}
+                  </td>
+                  <td className="border border-slate-200 px-3 py-1.5 text-slate-400">📎 {src.evidence?.[i] ?? src.evidence?.[0] ?? "—"}</td>
+                </tr>
+              );
+            })}
+            <tr>
+              <td className="border border-slate-200 bg-slate-50 text-center text-[9px] text-slate-300 py-1">{src.expectedFields.length + 1}</td>
+              <td className="border border-slate-200 px-3 py-2 text-[10px] text-slate-400" colSpan={3}>
+                {submitted
+                  ? `✓ Received via portal · extracted & reconciled by FlowOS`
+                  : src.status === "human_alert"
+                    ? `⚠ Awaiting ${src.owner} — escalated to human after 3 reminders`
+                    : `Awaiting submission from ${src.owner} (due Day ${src.dueTick})`}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* worksheet tabs (Excel-style) */}
+      <div className="bg-slate-100 border-t border-slate-300 px-2 py-1 flex items-center gap-0.5 overflow-x-auto">
+        {sources.map((s, i) => (
+          <button
+            key={s.id}
+            onClick={() => setActive(i)}
+            className={`shrink-0 text-[10.5px] px-2.5 py-1 rounded-t border-b-2 whitespace-nowrap transition-colors ${
+              i === active
+                ? `bg-white font-semibold ${TAB_TONE[s.status] ?? "border-slate-300 text-slate-700"}`
+                : "bg-slate-50 border-transparent text-slate-400 hover:text-slate-600"
+            }`}
+            title={`${s.name} — ${s.department}`}
+          >
+            <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1.5 align-middle ${SOURCE_STATUS[s.status].dot}`} />
+            {s.department}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -290,28 +430,21 @@ function UploadButton({ src }: { src: DataSource }) {
   );
 }
 
-function SourceRow({ src, tick, repName }: { src: DataSource; tick: number; repName: string }) {
-  const [showSheet, setShowSheet] = useState(false);
+function SourceRow({ src, tick }: { src: DataSource; tick: number; repName: string }) {
   const st = SOURCE_STATUS[src.status];
   const overdue = tick > src.dueTick && src.status !== "submitted";
   const openFlags = src.flags.filter((f) => f.status === "open").length;
   const resolvedFlags = src.flags.filter((f) => f.status !== "open").length;
 
   return (
-    <>
     <tr className="row-hover border-t border-slate-200/60">
       <td className="px-6 py-3">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setShowSheet((v) => !v)} title="Click to view the data sheet">
+        <div className="flex items-center gap-3">
           <span className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 border bg-[#f4ede3] text-slate-500 border-slate-200">
             {src.label.replace("Data ", "D")}
           </span>
           <div>
-            <div className="font-medium text-slate-800 text-[13px] flex items-center gap-2">
-              {src.name}
-              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${showSheet ? "bg-emerald-600 text-white border-emerald-600" : "bg-emerald-50 text-emerald-700 border-emerald-300"}`}>
-                ▦ {showSheet ? "Hide sheet" : "Excel sheet"}
-              </span>
-            </div>
+            <div className="font-medium text-slate-800 text-[13px]">{src.name}</div>
             <div className="text-[10.5px] text-slate-400">{src.principle ?? src.label}</div>
           </div>
         </div>
@@ -344,47 +477,5 @@ function SourceRow({ src, tick, repName }: { src: DataSource; tick: number; repN
         )}
       </td>
     </tr>
-    {showSheet && (
-      <tr className="border-t border-slate-200/40 bg-slate-50/50">
-        <td colSpan={7} className="px-6 py-4">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            {/* Excel-style live sheet */}
-            <div className="rounded-lg border border-emerald-700/30 overflow-hidden shadow-sm">
-              <div className="bg-emerald-700 text-white text-[10px] font-semibold px-3 py-1.5 flex items-center gap-2">
-                <span className="bg-white/20 rounded px-1">▦</span>
-                BRSR - FY26 - AREPL - {src.department}.xlsx {src.status !== "submitted" && "(awaiting SPOC)"}
-              </div>
-              <table className="text-[11px] bg-white">
-                <thead>
-                  <tr className="bg-emerald-50 text-emerald-900">
-                    <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold">KPI</th>
-                    <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold w-28">FY26 Value</th>
-                    <th className="border border-slate-200 px-3 py-1.5 text-left font-semibold">Evidence Required</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {src.expectedFields.map((f, i) => (
-                    <tr key={f}>
-                      <td className="border border-slate-200 px-3 py-1.5 text-slate-700">{f.replace(/_/g, " ")}</td>
-                      <td className={`border border-slate-200 px-3 py-1.5 tabular-nums font-medium ${src.submittedFields && f in src.submittedFields ? "text-slate-900" : "text-slate-300 italic"}`}>
-                        {src.submittedFields && f in src.submittedFields ? src.submittedFields[f] : "—"}
-                      </td>
-                      <td className="border border-slate-200 px-3 py-1.5 text-slate-400">📎 {src.evidence?.[i] ?? src.evidence?.[0] ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); downloadSheet(src, repName); }}
-              className="text-[11px] font-semibold px-3 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
-            >
-              ⬇ Download {src.status === "submitted" ? "filled sheet" : "blank template"} (.xlsx)
-            </button>
-          </div>
-        </td>
-      </tr>
-    )}
-    </>
   );
 }
