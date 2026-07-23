@@ -7,6 +7,10 @@ export interface CommPayload {
   to: string;
   subject?: string;
   body: string;
+  /** Sender, when not the FlowOS agent (e.g. a SPOC replying). */
+  from?: string;
+  /** "out" = FlowOS → recipient (default); "in" = inbound reply to FlowOS. */
+  direction?: "in" | "out";
 }
 
 export type SourceStatus = "pending" | "reminded" | "human_alert" | "submitted";
@@ -95,6 +99,9 @@ export type EventKind =
   | "validation_flag"
   | "reconciliation_flag"
   | "reconciliation_done"
+  | "validation_done"
+  | "owner_reply"
+  | "assurance"
   | "flag_resolved"
   | "report_generated"
   | "report_signed";
@@ -112,6 +119,7 @@ export interface AgentEvent {
     | "Validation Agent"
     | "Reconciliation Agent"
     | "Reporting Agent"
+    | "Assurance Agent"
     | "Human Reviewer";
   comm?: CommPayload;
 }

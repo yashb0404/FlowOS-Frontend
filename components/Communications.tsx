@@ -52,32 +52,39 @@ export function Communications({ reportId }: { reportId: string }) {
         {/* ── Email outbox ── */}
         <div className="lg:col-span-3 flex flex-col gap-4">
           <SectionLabel icon="✉" text="Email outbox" tone="text-rose-600" />
-          {[...emails].reverse().map((e) => (
-            <div key={e.id} className="glass rounded-2xl overflow-hidden fade-up">
-              <div className="px-5 py-3.5 border-b border-slate-200/70 bg-gradient-to-r from-rose-50/90 via-amber-50/50 to-transparent">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3d5a99] to-[#d63a5f] flex items-center justify-center text-[11px] font-bold text-white shrink-0">
-                      F
-                    </span>
-                    <div className="min-w-0">
-                      <div className="text-[12.5px] font-semibold text-slate-800 truncate">
-                        FlowOS Collection Agent <span className="font-normal text-slate-400">&lt;agent@flowos.ai&gt;</span>
+          {[...emails].reverse().map((e) => {
+            const inbound = e.comm!.direction === "in";
+            const sender = inbound ? e.comm!.from ?? "SPOC" : "FlowOS Collection Agent";
+            const senderEmail = inbound
+              ? `<${sender.toLowerCase().replace(/[^a-z]+/g, ".").replace(/^\.|\.$/g, "")}@arepl.co>`
+              : "<agent@flowos.ai>";
+            return (
+              <div key={e.id} className={`glass rounded-2xl overflow-hidden fade-up ${inbound ? "ml-6 border-l-2 border-l-emerald-300" : ""}`}>
+                <div className={`px-5 py-3.5 border-b border-slate-200/70 ${inbound ? "bg-gradient-to-r from-emerald-50/80 to-transparent" : "bg-gradient-to-r from-rose-50/90 via-amber-50/50 to-transparent"}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${inbound ? "bg-gradient-to-br from-[#7ca982] to-[#3d5a99]" : "bg-gradient-to-br from-[#3d5a99] to-[#d63a5f]"}`}>
+                        {inbound ? sender.slice(0, 1) : "F"}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-[12.5px] font-semibold text-slate-800 truncate">
+                          {sender} <span className="font-normal text-slate-400">{senderEmail}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 truncate">To: {e.comm!.to}</div>
                       </div>
-                      <div className="text-[11px] text-slate-500 truncate">To: {e.comm!.to}</div>
                     </div>
+                    <span className={`text-[10px] px-2 py-1 rounded-full whitespace-nowrap shrink-0 ${inbound ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "glass-soft text-slate-500"}`}>
+                      {inbound ? "Reply" : "Sent"} · Day {e.timestamp}
+                    </span>
                   </div>
-                  <span className="text-[10px] px-2 py-1 rounded-full glass-soft text-slate-500 whitespace-nowrap shrink-0">
-                    Sent · Day {e.timestamp}
-                  </span>
+                </div>
+                <div className="px-5 py-4">
+                  <div className="text-[13px] font-semibold text-slate-800 mb-2.5">{e.comm!.subject}</div>
+                  <p className="text-[12.5px] text-slate-600 leading-relaxed whitespace-pre-line">{e.comm!.body}</p>
                 </div>
               </div>
-              <div className="px-5 py-4">
-                <div className="text-[13px] font-semibold text-slate-800 mb-2.5">{e.comm!.subject}</div>
-                <p className="text-[12.5px] text-slate-600 leading-relaxed whitespace-pre-line">{e.comm!.body}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* ── Teams alerts ── */}

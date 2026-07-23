@@ -10,6 +10,7 @@ import {
   forceGenerate,
   makeEvent,
   createReportInstance,
+  assuranceEvents,
 } from "./engine";
 
 interface State {
@@ -66,6 +67,9 @@ function reducer(state: State, action: Action): State {
 
       const { reports: nextReports, events: e3 } = checkReportGeneration(state.reports, nextSources, newTick);
       newEvents.push(...e3);
+
+      const e4 = assuranceEvents(nextReports, nextSources, newTick, [...state.events, ...newEvents]);
+      newEvents.push(...e4);
 
       return { ...state, tick: newTick, reports: nextReports, sources: nextSources, events: [...state.events, ...newEvents] };
     }

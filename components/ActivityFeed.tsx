@@ -9,6 +9,7 @@ const ACTOR_STYLE: Record<string, { chip: string; label: string }> = {
   "Validation Agent": { chip: "bg-amber-50 text-amber-700 border-amber-200", label: "text-amber-600" },
   "Reconciliation Agent": { chip: "bg-orange-50 text-orange-700 border-orange-200", label: "text-orange-600" },
   "Reporting Agent": { chip: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "text-emerald-600" },
+  "Assurance Agent": { chip: "bg-indigo-50 text-indigo-700 border-indigo-200", label: "text-indigo-600" },
   "Human Reviewer": { chip: "bg-rose-50 text-rose-600 border-rose-200", label: "text-rose-600" },
 };
 
@@ -16,10 +17,13 @@ const KIND_ICON: Record<EventKind, string> = {
   reminder_sent: "✉",
   human_alert: "🔔",
   submitted: "✓",
+  owner_reply: "↩",
   extraction_done: "▤",
   validation_flag: "⚑",
+  validation_done: "☑",
   reconciliation_flag: "≠",
   reconciliation_done: "≈",
+  assurance: "🛡",
   flag_resolved: "⚖",
   report_generated: "▦",
   report_signed: "✍",

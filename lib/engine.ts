@@ -46,12 +46,37 @@ export function advanceSource(
 
   // Submission scripted per source for a repeatable demo
   if (src.submitAtTick !== null && tick >= src.submitAtTick) {
+    const chased = src.remindersSent > 0;
+    // Inbound reply email from the SPOC, with the completed sheet attached.
+    const reply: CommPayload = {
+      channel: "email",
+      direction: "in",
+      from: src.owner,
+      to: "FlowOS Collection Agent",
+      subject: `RE: ${src.name} — data sheet submitted`,
+      body: `Hi,\n\n${
+        chased ? "Apologies for the delay. " : ""
+      }Please find attached the completed "${src.name}" sheet for ${src.department}, with the FY26 figures filled in${
+        src.evidence?.length ? ` and the supporting evidence (${src.evidence.join(", ")})` : ""
+      }. Do let me know if anything else is needed.\n\nRegards,\n${firstName(src.owner)}\n${src.department} · AREPL`,
+    };
+    events.push(
+      makeEvent(
+        src.reportId,
+        src.id,
+        "owner_reply",
+        `${src.owner} replied with the completed "${src.name}" sheet${src.evidence?.length ? " and evidence" : ""} attached.`,
+        tick,
+        "Collection Agent",
+        reply
+      )
+    );
     events.push(
       makeEvent(
         src.reportId,
         src.id,
         "submitted",
-        `${src.owner} submitted "${src.name}" (${src.label}).`,
+        `"${src.name}" received and logged — queued for extraction.`,
         tick,
         "Collection Agent"
       )
@@ -164,6 +189,17 @@ export function runSourcePipeline(
         "Validation Agent"
       )
     );
+  } else {
+    events.push(
+      makeEvent(
+        src.reportId,
+        src.id,
+        "validation_done",
+        `Validation passed for "${src.name}" — all ${src.expectedFields.length} required fields present and well-formed.`,
+        tick,
+        "Validation Agent"
+      )
+    );
   }
 
   // Reconciliation vs mock ERP snapshot
@@ -212,6 +248,55 @@ export function runSourcePipeline(
   }
 
   return { src: { ...src, submittedFields: fields, flags }, events };
+}
+
+/**
+ * Assurance narration — fires once per phase when a report reaches its assurance
+ * window on the FY26 calendar (internal ~Day 20 · 27-Apr, external ~Day 38 · 3rd wk May).
+ */
+export function assuranceEvents(
+  reports: Report[],
+  sources: DataSource[],
+  tick: number,
+  existing: AgentEvent[]
+): AgentEvent[] {
+  const out: AgentEvent[] = [];
+  for (const rep of reports) {
+    if (!rep.assurance || rep.assurance === "none") continue;
+    const repSrc = sources.filter((s) => s.reportId === rep.id);
+    if (repSrc.length === 0) continue;
+    const inCount = repSrc.filter((s) => s.status === "submitted").length;
+    const mostIn = inCount >= Math.ceil(repSrc.length * 0.7);
+    const has = (tag: string) =>
+      existing.some((e) => e.reportId === rep.id && e.kind === "assurance" && e.message.startsWith(tag)) ||
+      out.some((e) => e.reportId === rep.id && e.message.startsWith(tag));
+
+    if (tick >= 20 && mostIn && !has("Internal assurance")) {
+      out.push(
+        makeEvent(
+          rep.id,
+          undefined,
+          "assurance",
+          `Internal assurance commenced — Group Sustainability and department SPOCs are reviewing ${inCount} of ${repSrc.length} data sheets for "${rep.name}" (27–30 Apr window).`,
+          tick,
+          "Assurance Agent"
+        )
+      );
+    }
+    if ((rep.assurance === "reasonable" || rep.assurance === "limited") && tick >= 38 && mostIn && !has("External assurance")) {
+      out.push(
+        makeEvent(
+          rep.id,
+          undefined,
+          "assurance",
+          `External assurance underway — third-party assurer sampling >90% of reported data for "${rep.name}"; any findings route to Human Review before closure.`,
+          tick,
+          "Assurance Agent"
+        )
+      );
+    }
+  }
+  return out;
 }
 
 /** Final value for a field after human resolution. */
