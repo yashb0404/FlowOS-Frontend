@@ -224,16 +224,6 @@ export function FlowDiagram({ reportId }: { reportId: string }) {
           onClose={() => setSelected(null)}
         />
       )}
-
-      <div className="glass rounded-2xl p-5 flex items-start gap-3">
-        <span className="text-lg">⛩</span>
-        <p className="text-[12px] text-slate-500 leading-relaxed">
-          <span className="font-semibold text-slate-700">The gate:</span> step 6 fires only when every data source
-          has cleared steps 1–5 — or a human explicitly opens it with gaps marked. Node library in the full product:
-          Schedule · Send Email · Teams Alert · Wait · If/Else · OCR Document · Validate Fields · Reconcile vs ERP ·
-          Human Gate · Fill Template · Store in Hub.
-        </p>
-      </div>
     </div>
   );
 }
@@ -258,6 +248,18 @@ const SRC_DOT: Record<string, string> = {
   reminded: "bg-amber-500",
   human_alert: "bg-rose-500",
   submitted: "bg-emerald-500",
+};
+
+/** Realistic runtime profile per agent — engine, autonomy, latency, and which event kinds it emits. */
+const AGENT_META: Record<string, { actor: string; engine: string; autonomy: string; autoTone: string; latency: string; kinds: string[] }> = {
+  collect: { actor: "Collection Agent", engine: "Scheduler · MS-Graph / SMTP connector", autonomy: "Autonomous", autoTone: "emerald", latency: "~2s / message", kinds: ["reminder_sent", "human_alert", "submitted", "owner_reply"] },
+  extract: { actor: "Extraction Agent", engine: "Claude Opus 4.8 · vision OCR + table parse", autonomy: "Autonomous", autoTone: "emerald", latency: "~6s / document", kinds: ["extraction_done"] },
+  validate: { actor: "Validation Agent", engine: "Deterministic rule engine · JSON-schema", autonomy: "Autonomous", autoTone: "emerald", latency: "<1s / sheet", kinds: ["validation_done", "validation_flag"] },
+  reconcile: { actor: "Reconciliation Agent", engine: "Claude Opus 4.8 · numeric diff vs ERP", autonomy: "Autonomous", autoTone: "emerald", latency: "~3s / sheet", kinds: ["reconciliation_done", "reconciliation_flag"] },
+  review: { actor: "Human Reviewer", engine: "Human-in-the-loop console", autonomy: "Human-gated", autoTone: "rose", latency: "reviewer-paced", kinds: ["flag_resolved"] },
+  assure_int: { actor: "Assurance Agent", engine: "Assurance workflow · evidence sampler", autonomy: "Human-gated", autoTone: "sky", latency: "27–30 Apr window", kinds: ["assurance"] },
+  assure_ext: { actor: "Assurance Agent", engine: "Third-party assurer portal", autonomy: "External party", autoTone: "indigo", latency: "3rd wk May", kinds: ["assurance"] },
+  generate: { actor: "Reporting Agent", engine: "Claude Opus 4.8 · BRSR template filler", autonomy: "Gated · human sign-off", autoTone: "emerald", latency: "~12s / report", kinds: ["report_generated", "report_signed"] },
 };
 
 function AgentSettings({
@@ -291,6 +293,12 @@ function AgentSettings({
   const reminders = events.filter((e) => e.kind === "reminder_sent").length;
   const alerts = events.filter((e) => e.kind === "human_alert").length;
 
+  const meta = AGENT_META[agentKey];
+  const agentEvents = events.filter((e) => meta && meta.kinds.includes(e.kind));
+  const runs = agentEvents.length;
+  const lastRun = agentEvents.length ? Math.max(...agentEvents.map((e) => e.timestamp)) : null;
+  const recent = [...agentEvents].reverse().slice(0, 4);
+
   const panelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Wait out the fade-up entrance animation, then bring the panel into view.
@@ -314,6 +322,21 @@ function AgentSettings({
           ✕
         </button>
       </div>
+
+      {/* runtime strip */}
+      {meta && (
+        <div className="rounded-xl glass-soft border border-slate-200/70 px-4 py-2.5 mb-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-glow" />
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Engine</span>
+            <span className="text-[11.5px] font-medium text-[#3d5a99]">{meta.engine}</span>
+          </div>
+          <RtStat label="Autonomy" value={meta.autonomy} tone={meta.autoTone} />
+          <RtStat label="Latency" value={meta.latency} />
+          <RtStat label="Runs" value={String(runs)} />
+          <RtStat label="Last run" value={lastRun !== null ? `Day ${lastRun}` : "—"} />
+        </div>
+      )}
 
       {agentKey === "collect" && (
         <div className="grid lg:grid-cols-2 gap-5">
@@ -582,6 +605,40 @@ function AgentSettings({
           </p>
         </div>
       )}
+
+      {/* live recent-activity log for this agent */}
+      {meta && (
+        <div className="mt-4 pt-3 border-t border-slate-200/70">
+          <SettingLabel text="Recent activity — this agent" />
+          <div className="mt-2 flex flex-col gap-1">
+            {recent.length === 0 ? (
+              <p className="text-[11px] text-slate-400 italic">No activity yet — advance the simulation to see this agent work.</p>
+            ) : (
+              recent.map((e) => (
+                <div key={e.id} className="flex items-start gap-2 text-[11px]">
+                  <span className="text-[9px] font-mono text-slate-400 shrink-0 mt-0.5 w-10">D{e.timestamp}</span>
+                  <span className="text-slate-600 leading-snug">{e.message}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RtStat({ label, value, tone }: { label: string; value: string; tone?: string }) {
+  const vt =
+    tone === "emerald" ? "text-emerald-600"
+    : tone === "rose" ? "text-rose-600"
+    : tone === "sky" ? "text-sky-600"
+    : tone === "indigo" ? "text-[#3d5a99]"
+    : "text-slate-700";
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">{label}</span>
+      <span className={`text-[11.5px] font-semibold ${vt}`}>{value}</span>
     </div>
   );
 }
