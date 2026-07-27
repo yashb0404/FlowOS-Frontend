@@ -81,7 +81,7 @@ export function advanceSource(
         "Collection Agent"
       )
     );
-    return { src: { ...src, status: "submitted" }, events };
+    return { src: { ...src, status: "submitted", submittedAtTick: tick }, events };
   }
 
   const daysPastDue = tick - src.dueTick;

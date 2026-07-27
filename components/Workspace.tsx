@@ -10,9 +10,11 @@ import { ActivityFeed } from "./ActivityFeed";
 import { Reports } from "./Reports";
 import { FlowDiagram } from "./FlowDiagram";
 import { BrsrDocument } from "./BrsrDocument";
+import { CollectionTracker } from "./CollectionTracker";
 
 export const WORKSPACE_TABS = [
   { key: "dashboard", label: "Collection Dashboard", icon: "◧" },
+  { key: "tracker", label: "Live Tracker", icon: "▦" },
   { key: "flow", label: "Flow", icon: "⬡" },
   { key: "comms", label: "Communications", icon: "✉" },
   { key: "review", label: "Review", icon: "⚖" },
@@ -25,6 +27,7 @@ export type WorkspaceTabKey = (typeof WORKSPACE_TABS)[number]["key"];
 
 const TAB_SUBS: Record<WorkspaceTabKey, string> = {
   dashboard: "This report is generated only when every one of its data sources is collected, validated and reconciled.",
+  tracker: "The live collection tracker as a spreadsheet — status ticks over as sheets arrive; download the identical Excel any time.",
   flow: "This report's agent pipeline, live. Click any agent to inspect and configure its requirements for this report.",
   comms: "Every follow-up email and Teams alert sent for this report — exactly as recipients see them.",
   review: "Flags for this report land here. Approve, override, or force-generate with gaps — every decision is audited.",
@@ -164,6 +167,7 @@ export function Workspace({
 
         <div key={`${active.id}-${tab}`} className="fade-up fade-up-1">
           {tab === "dashboard" && <Dashboard reportId={active.id} />}
+          {tab === "tracker" && <CollectionTracker reportId={active.id} />}
           {tab === "flow" && <FlowDiagram reportId={active.id} />}
           {tab === "comms" && <Communications reportId={active.id} />}
           {tab === "review" && <Review reportId={active.id} />}

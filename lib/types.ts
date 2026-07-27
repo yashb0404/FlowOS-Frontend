@@ -49,6 +49,7 @@ export interface DataSource {
   owner: string;
   dueTick: number;
   submitAtTick: number | null; // null = never submits (demo: unresponsive owner)
+  submittedAtTick?: number; // the tick it actually arrived (scripted or via upload)
   status: SourceStatus;
   remindersSent: number;
   expectedFields: string[];

@@ -181,7 +181,7 @@ function reducer(state: State, action: Action): State {
           "Collection Agent"
         ),
       ];
-      const { src: processed, events: e2 } = runSourcePipeline({ ...src, status: "submitted" }, state.tick);
+      const { src: processed, events: e2 } = runSourcePipeline({ ...src, status: "submitted", submittedAtTick: state.tick }, state.tick);
       newEvents.push(...e2);
       const nextSources = state.sources.map((s) => (s.id === src.id ? processed : s));
       const { reports: nextReports, events: e3 } = checkReportGeneration(state.reports, nextSources, state.tick);

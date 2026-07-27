@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import { DataSource, Report } from "./types";
 import { questionsForSource } from "./brsrQuestions";
+import { trackerRows, TRACKER_COLUMNS, TrackerStatus } from "./tracker";
 
 const label = (f: string) => f.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 const safeName = (s: string) => s.replace(/[[\]:*?/\\]/g, " ").slice(0, 31);
@@ -93,6 +94,70 @@ export async function downloadSheet(src: DataSource, repName: string) {
     questionRows(src)
   );
   await save(wb, `BRSR - FY26 - AREPL - ${src.department}${filled ? "" : " - TEMPLATE"}.xlsx`);
+}
+
+const STATUS_FILL: Record<TrackerStatus, string> = {
+  pending: "FFF1F5F9",
+  reminded: "FFFEF3C7",
+  human_alert: "FFFFE4E6",
+  submitted: "FFDCFCE7",
+};
+const STATUS_TEXT: Record<TrackerStatus, string> = {
+  pending: "FF64748B",
+  reminded: "FFB45309",
+  human_alert: "FFE11D48",
+  submitted: "FF059669",
+};
+
+/** Download the live collection tracker as a styled .xlsx — identical to the on-screen sheet. */
+export async function downloadTracker(report: Report, sources: DataSource[], tick: number) {
+  const repSources = sources.filter((s) => s.reportId === report.id);
+  const rows = trackerRows(repSources);
+  const inCount = repSources.filter((s) => s.status === "submitted").length;
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "FlowOS";
+  const ws = wb.addWorksheet("Collection Tracker");
+  ws.columns = [{ width: 5 }, { width: 24 }, { width: 24 }, { width: 8 }, { width: 18 }, { width: 18 }, { width: 20 }, { width: 12 }, { width: 12 }, { width: 34 }];
+
+  const titles = [
+    { text: "RNGalla Family Private Limited — AREPL (Galla Foods)", brand: true, strong: true, size: 13 },
+    { text: `${report.name} — Data Collection Tracker`, strong: true, size: 12 },
+    { text: `As of Day ${tick} · ${inCount}/${repSources.length} data sheets received · live from FlowOS`, italic: true, size: 10.5 },
+  ];
+  titles.forEach((t, i) => {
+    const r = ws.addRow([t.text]);
+    ws.mergeCells(r.number, 1, r.number, 10);
+    r.getCell(1).font = { bold: t.strong, italic: (t as { italic?: boolean }).italic ?? false, size: t.size, color: { argb: t.brand ? NAVY : i === 0 ? INK : GREY } };
+    r.height = i === 0 ? 20 : 16;
+  });
+  ws.addRow([]);
+
+  const head = ws.addRow([...TRACKER_COLUMNS]);
+  head.eachCell((c) => {
+    c.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10 };
+    c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY } };
+    c.alignment = { vertical: "middle", wrapText: true };
+    c.border = allBorders;
+  });
+  head.height = 22;
+
+  rows.forEach((row, i) => {
+    const r = ws.addRow([row.no, row.department, row.spoc, row.kpis, row.due, row.status, row.submittedOn, row.followUps, row.flags, row.evidence]);
+    r.eachCell((c, col) => {
+      c.border = allBorders;
+      c.alignment = { vertical: "middle", horizontal: col === 1 || col === 4 ? "center" : "left", wrapText: col === 10 };
+      c.font = { size: 10, color: { argb: INK } };
+      if (i % 2 === 1) c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY_SOFT } };
+      if (col === 6) {
+        c.font = { size: 10, bold: true, color: { argb: STATUS_TEXT[row.statusKind] } };
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: STATUS_FILL[row.statusKind] } };
+      }
+    });
+  });
+
+  ws.views = [{ state: "frozen", ySplit: head.number }];
+  await save(wb, `${report.name.replace(/[^\w]+/g, "_")}_CollectionTracker.xlsx`);
 }
 
 /** Download the whole report as one styled Excel workbook — Contents + a sheet per department. */
