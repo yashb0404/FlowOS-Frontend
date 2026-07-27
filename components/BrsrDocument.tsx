@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { questionsForSource } from "@/lib/brsrQuestions";
 import { departmentReport } from "@/lib/brsrReport";
 import { buildFullReportHtml, printHtml } from "@/lib/fullReport";
+import { downloadFullWorkbook } from "@/lib/sheetExport";
 import { BrsrQuestion, DataSource } from "@/lib/types";
 
 /** Build the Q&A list for a department — real questions, or a fallback from its KPI fields. */
@@ -44,12 +45,20 @@ export function BrsrDocument({ reportId }: { reportId: string }) {
             Cover · contents · {repSources.length} department sections (Q&amp;A + compiled disclosure) — {submittedCount}/{repSources.length} ready.
           </p>
         </div>
-        <button
-          onClick={() => printHtml(buildFullReportHtml(rep, sources))}
-          className="btn-primary px-4 py-2 text-[12.5px] rounded-xl text-white font-semibold whitespace-nowrap"
-        >
-          ⬇ Assemble &amp; download PDF
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => downloadFullWorkbook(rep, sources)}
+            className="px-3.5 py-2 text-[12.5px] rounded-xl font-semibold whitespace-nowrap border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+          >
+            ⬇ Excel workbook
+          </button>
+          <button
+            onClick={() => printHtml(buildFullReportHtml(rep, sources))}
+            className="btn-primary px-4 py-2 text-[12.5px] rounded-xl text-white font-semibold whitespace-nowrap"
+          >
+            ⬇ PDF report
+          </button>
+        </div>
       </div>
 
       {/* department selector — like an index of chapters */}
