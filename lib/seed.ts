@@ -51,7 +51,51 @@ export const seedReports: Report[] = [
     regulation: "Internal ESG policy (group sustainability)",
     assurance: "none",
   },
+  {
+    id: "rep-fy25",
+    name: "BRSR Report — AREPL FY25 (Filed)",
+    project: "Prior-year filed disclosure · comparison baseline",
+    frequency: "one-time",
+    status: "generated",
+    regulation: "SEBI LODR Reg. 34(2)(f) · BRSR format",
+    assurance: "limited",
+    generatedAtTick: 0,
+    signedBy: "C. Sekhar (Company Secretary)",
+    signedAtTick: 0,
+  },
 ];
+
+/** Prior-year (FY25) sources — all pre-submitted; this report is already filed & signed. */
+const FY25_DEPTS = [
+  { d: "Company Secretary", o: "Ravi Kumar P", p: "Section A/B — Governance", ev: ["Board minutes"] },
+  { d: "Finance", o: "Avinash P", p: "P8 — Inclusive growth", ev: ["Audited P&L"] },
+  { d: "Sustainability", o: "Mansi S", p: "P6 — Environment", ev: ["Emission calc workbook"] },
+  { d: "HR", o: "Hima Bindu K", p: "P3 — Employee well-being", ev: ["HRMS export"] },
+  { d: "CSR", o: "Bala Subrahmanyam B", p: "P8 — Inclusive growth", ev: ["Project certificates"] },
+  { d: "Marketing", o: "Pavan Kumar D", p: "P9 — Consumer value", ev: ["Complaint register"] },
+  { d: "Procurement", o: "Prasanna D", p: "P8 — Inclusive growth", ev: ["Vendor master"] },
+  { d: "HSE", o: "Palla Satish", p: "P3 — Employee well-being", ev: ["Incident register"] },
+  { d: "Energy", o: "Kondala Santhoshkumar", p: "P6 — Environment", ev: ["Utility bills"] },
+  { d: "IT", o: "Ramesh Kumar O", p: "P9 — Consumer value", ev: ["Security log"] },
+];
+
+const fy25Sources: DataSource[] = FY25_DEPTS.map((t, i) => ({
+  id: `ds-fy25-${i + 1}`,
+  reportId: "rep-fy25",
+  label: `Data ${i + 1}`,
+  name: `${t.d} KPIs`,
+  department: t.d,
+  owner: t.o,
+  dueTick: 0,
+  submitAtTick: 0,
+  submittedAtTick: 0,
+  status: "submitted",
+  remindersSent: 0,
+  expectedFields: [],
+  flags: [],
+  principle: t.p,
+  evidence: t.ev,
+}));
 
 export const seedSources: DataSource[] = [
   // ── Report 1: BRSR — the 10 real AREPL SPOCs from the client email ──
@@ -87,6 +131,9 @@ export const seedSources: DataSource[] = [
   { id: "ds-22", reportId: "rep-5", label: "Data 1", name: "Energy & Water Tracker", department: "Energy", owner: "Kondala Santhoshkumar", dueTick: 3, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["energy_gj_q1", "water_kl_q1"], flags: [], principle: "Internal ESG KPI set", evidence: ["Monthly meter summary"] },
   { id: "ds-23", reportId: "rep-5", label: "Data 2", name: "Emissions Tracker", department: "Sustainability", owner: "Mansi S", dueTick: 3, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["scope1_q1_tco2e", "scope2_q1_tco2e"], flags: [], principle: "Internal ESG KPI set", evidence: ["Calc workbook Q1"] },
   { id: "ds-24", reportId: "rep-5", label: "Data 3", name: "Safety & Incident Tracker", department: "HSE", owner: "Palla Satish", dueTick: 5, submitAtTick: 6, status: "pending", remindersSent: 0, expectedFields: ["incidents_q1", "near_misses_q1"], flags: [], principle: "Internal ESG KPI set", evidence: ["Incident register Q1"] },
+
+  // ── Prior-year filed report (FY25) — all pre-submitted ──
+  ...fy25Sources,
 ];
 
 /**

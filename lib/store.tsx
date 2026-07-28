@@ -203,14 +203,17 @@ function reducer(state: State, action: Action): State {
     case "RESET":
       return {
         ...initialState,
-        reports: seedReports.map((r) => ({ ...r, status: "collecting" as const, generatedAtTick: undefined, sections: undefined, gaps: undefined, signedBy: undefined, signedAtTick: undefined })),
-        sources: seedSources.map((s) => ({
-          ...s,
-          status: "pending" as const,
-          remindersSent: 0,
-          submittedFields: undefined,
-          flags: [],
-        })),
+        // The prior-year filed report (rep-fy25) is a fixed baseline — leave it as seeded.
+        reports: seedReports.map((r) =>
+          r.id === "rep-fy25"
+            ? r
+            : { ...r, status: "collecting" as const, generatedAtTick: undefined, sections: undefined, gaps: undefined, signedBy: undefined, signedAtTick: undefined }
+        ),
+        sources: seedSources.map((s) =>
+          s.reportId === "rep-fy25"
+            ? s
+            : { ...s, status: "pending" as const, remindersSent: 0, submittedFields: undefined, flags: [] }
+        ),
       };
 
     default:

@@ -216,6 +216,59 @@ export const QUESTIONS_BY_SOURCE: Record<string, BrsrQuestion[]> = {
     { code: "ESG-S1", section: "C", text: "Number of safety incidents recorded in Q1", answer: 1 },
     { code: "ESG-S2", section: "C", text: "Number of near-misses reported in Q1", answer: 6 },
   ],
+
+  // ── Prior-year filed report (FY25) — the comparison baseline ──
+  "ds-fy25-1": [
+    { code: "P1 Q1", section: "C", text: "Number of board meetings held during the financial year", answer: 5 },
+    { code: "P1 Q2", section: "C", text: "Percentage of independent directors on the board", answer: 50, unit: "%" },
+    { code: "P1 Q3", section: "C", text: "Coverage of anti-corruption / anti-bribery awareness training", answer: 96, unit: "%" },
+    { code: "P1 Q7", section: "C", text: "Number of conflict-of-interest complaints received", answer: 0 },
+  ],
+  "ds-fy25-2": [
+    { code: "A.17", section: "A", text: "Turnover of the entity for the financial year", answer: 761, unit: "₹ Cr" },
+    { code: "P8 Q1", section: "C", text: "CSR obligation for the year", answer: 152, unit: "₹ lakh" },
+    { code: "P8 Q2", section: "C", text: "Amount spent on CSR during the year", answer: 155, unit: "₹ lakh" },
+  ],
+  "ds-fy25-3": [
+    { code: "P6 Q1", section: "C", text: "Total Scope 1 GHG emissions", answer: 3390, unit: "tCO₂e" },
+    { code: "P6 Q2", section: "C", text: "Total Scope 2 GHG emissions", answer: 5720, unit: "tCO₂e" },
+    { code: "P6 Q7", section: "C", text: "Total water withdrawal", answer: 98200, unit: "KL" },
+    { code: "P6 Q11", section: "C", text: "Total waste generated and % recycled", answer: "455 MT · 71% recycled" },
+  ],
+  "ds-fy25-4": [
+    { code: "A.20", section: "A", text: "Total number of employees", answer: 1378 },
+    { code: "P3 Q1", section: "C", text: "Percentage of women in the total workforce", answer: 24, unit: "%" },
+    { code: "P3 Q6", section: "C", text: "Coverage of skill-upgradation training", answer: 78, unit: "%" },
+    { code: "P5 Q7", section: "C", text: "POSH complaints filed and resolved", answer: "3 filed · 3 resolved" },
+  ],
+  "ds-fy25-5": [
+    { code: "P8 Q5", section: "C", text: "Number of CSR projects undertaken", answer: 12 },
+    { code: "P8 Q6", section: "C", text: "Total beneficiaries reached", answer: 41000 },
+    { code: "P8 Q3", section: "C", text: "Number of Social Impact Assessments conducted", answer: 4 },
+  ],
+  "ds-fy25-6": [
+    { code: "P9 Q1", section: "C", text: "Total consumer complaints received", answer: 45 },
+    { code: "P9 Q2", section: "C", text: "Percentage of consumer complaints resolved", answer: 94, unit: "%" },
+    { code: "P9 Q5", section: "C", text: "Number of product recalls", answer: 0 },
+  ],
+  "ds-fy25-7": [
+    { code: "P8 Q4", section: "C", text: "Procurement from MSMEs / small producers", answer: 27, unit: "%" },
+    { code: "P8 Q9", section: "C", text: "Procurement from local suppliers", answer: 61, unit: "%" },
+  ],
+  "ds-fy25-8": [
+    { code: "P3 Q11", section: "C", text: "Lost Time Injury Frequency Rate (LTIFR)", answer: 0.6 },
+    { code: "P3 Q12", section: "C", text: "Total recordable work-related injuries", answer: 6 },
+    { code: "P3 Q13", section: "C", text: "Number of fatalities during the year", answer: 0 },
+    { code: "P3 Q9", section: "C", text: "Safety training coverage", answer: 88, unit: "%" },
+  ],
+  "ds-fy25-9": [
+    { code: "P6 Q1a", section: "C", text: "Total energy consumed", answer: 152400, unit: "GJ" },
+    { code: "P6 Q1b", section: "C", text: "Percentage of energy from renewable sources", answer: 18, unit: "%" },
+  ],
+  "ds-fy25-10": [
+    { code: "P9 Q9", section: "C", text: "Number of data breaches during the year", answer: 0 },
+    { code: "P9 Q10", section: "C", text: "Data-privacy complaints from customers", answer: 2 },
+  ],
 };
 
 /** Convenience: questions for a department, or [] if none defined. */

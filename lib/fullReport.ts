@@ -109,12 +109,26 @@ function brsrFormatBody(repSources: DataSource[]): { contents: string; sections:
     <p class="dept-meta">Details of the listed entity and its operations (Essential Indicators A.1–A.26).</p>
     ${qaTable(sectionA, true)}</section>`;
 
+  const policyRows = [
+    ["P1", "Ethics & governance", "Yes", "Yes", "Yes", "Board / Audit Committee"],
+    ["P2", "Sustainable & safe goods", "Yes", "Yes", "Yes", "R&D / Quality"],
+    ["P3", "Employee well-being", "Yes", "Yes", "Yes", "CHRO"],
+    ["P4", "Stakeholder responsiveness", "Yes", "Yes", "Partial", "Corporate Affairs"],
+    ["P5", "Human rights", "Yes", "Yes", "Yes", "CHRO / Legal"],
+    ["P6", "Environment", "Yes", "Yes", "Yes", "Chief Sustainability Officer"],
+    ["P7", "Policy advocacy", "Yes", "Yes", "N/A", "Corporate Affairs"],
+    ["P8", "Inclusive growth", "Yes", "Yes", "Yes", "CSR Committee"],
+    ["P9", "Consumer value", "Yes", "Yes", "Yes", "Marketing / Quality"],
+  ];
   const sectionBHtml = `<section class="dept"><h2>Section B — Management &amp; Process Disclosures</h2>
-    <div class="narr"><p>The entity has Board-approved policies covering all nine NGRBC principles, translated into
-    operating procedures and extended to value-chain partners where applicable. Governance, leadership and oversight
-    of the National Guidelines on Responsible Business Conduct are exercised by the Board and its committees, with
-    periodic review of performance against each principle. Independent assessment of the working of the policies is
-    carried out and disclosed under the applicable indicators (B.1–B.12).</p></div></section>`;
+    <p class="dept-meta">Policy and management processes across the nine NGRBC principles (indicators B.1–B.12).</p>
+    <table class="qa"><thead><tr><th>Principle</th><th>Coverage area</th><th>Policy in place</th><th>Board approved</th><th>Extends to value chain</th><th>Oversight</th></tr></thead><tbody>${policyRows
+      .map(
+        (r) => `<tr>${r.map((c, ci) => `<td class="${ci === 0 ? "q-code" : ""}">${esc(c)}</td>`).join("")}</tr>`
+      )
+      .join("")}</tbody></table>
+    <div class="narr"><p>The entity's policies are translated into operating procedures and reviewed periodically by the
+    Board and its committees; independent assessment of their working is carried out and disclosed under B.10–B.12.</p></div></section>`;
 
   const sectionCHtml = `<section class="dept"><h2>Section C — Principle-wise Performance Disclosure</h2></section>
     ${principlesPresent
