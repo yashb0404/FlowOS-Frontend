@@ -37,7 +37,7 @@ type Action =
   | { type: "CREATE_REPORT"; name: string }
   | { type: "UPLOAD_SUBMIT"; sourceId: string; fileName: string; fields: Record<string, number | string> };
 
-const initialState: State = {
+const freshState: State = {
   tick: 0,
   reports: seedReports,
   sources: seedSources,
@@ -202,7 +202,7 @@ function reducer(state: State, action: Action): State {
 
     case "RESET":
       return {
-        ...initialState,
+        ...freshState,
         // The prior-year filed report (rep-fy25) is a fixed baseline — leave it as seeded.
         reports: seedReports.map((r) =>
           r.id === "rep-fy25"
@@ -220,6 +220,18 @@ function reducer(state: State, action: Action): State {
       return state;
   }
 }
+
+/**
+ * The app loads with the FY26 collection cycle already run to completion — all
+ * data present, with the realistic exceptions intact (CSR no-show, open flags,
+ * the clean ESG report auto-generated). No manual "Advance Day" needed.
+ */
+const END_TICK = 42;
+const initialState: State = (() => {
+  let s = freshState;
+  for (let i = 0; i < END_TICK; i++) s = reducer(s, { type: "ADVANCE" });
+  return s;
+})();
 
 interface StoreValue extends State {
   advanceDay: () => void;

@@ -14,7 +14,7 @@ export const TOUR_STEPS: TourStep[] = [
     tab: "home",
     title: "The report deck",
     desc: "Every card is an isolated report workspace with its own pipeline. The bar at the bottom of each card shows how far that report has progressed toward sign-off.",
-    action: "Click Advance Day (or Auto-play) a few times and watch each card's progress bar fill at its own pace. Then open the BRSR Report card.",
+    action: "The FY26 cycle is already collected — each card's bar shows how far that report got. Open the BRSR Report card to go inside.",
   },
   {
     tab: "dashboard",
