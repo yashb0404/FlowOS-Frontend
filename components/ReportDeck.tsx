@@ -71,18 +71,11 @@ export function ReportDeck() {
             <button onClick={() => setCreating(true)} className="flex flex-col items-center gap-2 text-slate-400 hover:text-slate-700 transition-colors">
               <span className="w-12 h-12 rounded-2xl glass-soft flex items-center justify-center text-2xl">＋</span>
               <span className="text-[13px] font-semibold">New Report</span>
-              <span className="text-[10.5px]">from flow template</span>
             </button>
           )}
         </div>
       </div>
 
-      {reports.length > 0 && (
-        <p className="text-[11.5px] text-slate-400 px-1">
-          Each card is an isolated workspace running the full pipeline — collection, communications, review and
-          generation are scoped per report. Progress: collection 45% · checks 25% · generation 20% · sign-off 10%.
-        </p>
-      )}
     </div>
   );
 

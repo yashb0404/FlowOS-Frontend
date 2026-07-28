@@ -34,15 +34,6 @@ export const seedReports: Report[] = [
     assurance: "reasonable",
   },
   {
-    id: "rep-4",
-    name: "CSR Annual Report — AREPL FY26",
-    project: "Board CSR Committee · Schedule VII activities",
-    frequency: "one-time",
-    status: "collecting",
-    regulation: "Companies Act 2013 §135 · Schedule VII",
-    assurance: "internal",
-  },
-  {
     id: "rep-5",
     name: "ESG Data Book — Q1 FY27",
     project: "Quarterly internal ESG tracker",
@@ -122,11 +113,6 @@ export const seedSources: DataSource[] = [
   { id: "ds-17", reportId: "rep-3", label: "Data 3", name: "Payroll & Benefits Evidence", department: "HR", owner: "Hima Bindu K", dueTick: 36, submitAtTick: 36, status: "pending", remindersSent: 0, expectedFields: ["pf_coverage_pct", "wage_records_months"], flags: [], principle: "BRSR Core — Attr. 3 (Wages)", evidence: ["PF ECR challans", "Payroll extract"] },
   { id: "ds-18", reportId: "rep-3", label: "Data 4", name: "Utility Invoices — APSPDCL", department: "External Vendor", owner: "APSPDCL (discom)", dueTick: 36, submitAtTick: null, status: "pending", remindersSent: 0, expectedFields: ["duplicate_invoice_set"], flags: [], principle: "BRSR Core — Attr. 1 (GHG)", evidence: ["Certified duplicate bills"] },
 
-  // ── Report 4: CSR Annual Report — Companies Act §135 ──
-  { id: "ds-19", reportId: "rep-4", label: "Data 1", name: "CSR Project Register", department: "CSR", owner: "Bala Subrahmanyam B", dueTick: 24, submitAtTick: 26, status: "pending", remindersSent: 0, expectedFields: ["projects_completed", "ongoing_projects"], flags: [], principle: "Schedule VII activities", evidence: ["Project MOUs", "Photo documentation"] },
-  { id: "ds-20", reportId: "rep-4", label: "Data 2", name: "CSR Spend Ledger", department: "Finance", owner: "Avinash P", dueTick: 24, submitAtTick: 25, status: "pending", remindersSent: 0, expectedFields: ["csr_obligation_lakhs", "csr_spent_lakhs"], flags: [], principle: "§135(5) — 2% obligation", evidence: ["Ledger extract", "Utilization certificates"] },
-  { id: "ds-21", reportId: "rep-4", label: "Data 3", name: "Impact Assessment", department: "External Agency", owner: "SoulAce Consulting", dueTick: 26, submitAtTick: 29, status: "pending", remindersSent: 0, expectedFields: ["projects_assessed", "impact_score", "beneficiary_reach"], flags: [], principle: "CSR Rules 2021 — impact assessment", evidence: ["Signed assessment report"] },
-
   // ── Report 5: quarterly ESG data book — fast, clean tracker ──
   { id: "ds-22", reportId: "rep-5", label: "Data 1", name: "Energy & Water Tracker", department: "Energy", owner: "Kondala Santhoshkumar", dueTick: 3, submitAtTick: 3, status: "pending", remindersSent: 0, expectedFields: ["energy_gj_q1", "water_kl_q1"], flags: [], principle: "Internal ESG KPI set", evidence: ["Monthly meter summary"] },
   { id: "ds-23", reportId: "rep-5", label: "Data 2", name: "Emissions Tracker", department: "Sustainability", owner: "Mansi S", dueTick: 3, submitAtTick: 4, status: "pending", remindersSent: 0, expectedFields: ["scope1_q1_tco2e", "scope2_q1_tco2e"], flags: [], principle: "Internal ESG KPI set", evidence: ["Calc workbook Q1"] },
@@ -162,10 +148,6 @@ export const submittedData: Record<string, Record<string, number>> = {
   "ds-15": { utility_invoices_count: 12, meter_log_months: 12 },
   "ds-16": { incident_reports_count: 5, manhours_lakhs: 31 },
   "ds-17": { pf_coverage_pct: 100, wage_records_months: 12 },
-  // CSR report
-  "ds-19": { projects_completed: 11, ongoing_projects: 4 },
-  "ds-20": { csr_obligation_lakhs: 168, csr_spent_lakhs: 176 }, // books say 181 → recon flag
-  "ds-21": { projects_assessed: 6, impact_score: 8 }, // beneficiary_reach missing → validation flag
   // ESG data book
   "ds-22": { energy_gj_q1: 36900, water_kl_q1: 22400 },
   "ds-23": { scope1_q1_tco2e: 760, scope2_q1_tco2e: 1310 },
@@ -190,9 +172,6 @@ export const erpSnapshot: Record<string, Record<string, number>> = {
   "ds-15": { utility_invoices_count: 12, meter_log_months: 12 },
   "ds-16": { incident_reports_count: 5, manhours_lakhs: 31 },
   "ds-17": { pf_coverage_pct: 100, wage_records_months: 12 },
-  "ds-19": { projects_completed: 11, ongoing_projects: 4 },
-  "ds-20": { csr_obligation_lakhs: 168, csr_spent_lakhs: 181 }, // audited books
-  "ds-21": { projects_assessed: 6, impact_score: 8 },
   "ds-22": { energy_gj_q1: 36900, water_kl_q1: 22400 },
   "ds-23": { scope1_q1_tco2e: 760, scope2_q1_tco2e: 1310 },
   "ds-24": { incidents_q1: 1, near_misses_q1: 6 },

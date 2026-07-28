@@ -194,19 +194,6 @@ export const QUESTIONS_BY_SOURCE: Record<string, BrsrQuestion[]> = {
     { code: "Core A3", section: "C", text: "Provident Fund coverage of eligible employees", answer: 100, unit: "%" },
     { code: "Core A3", section: "C", text: "Months of wage records available for assurance sampling", answer: 12 },
   ],
-  // Report 4 — CSR Annual Report (Companies Act §135)
-  "ds-19": [
-    { code: "§135", section: "C", text: "Number of CSR projects completed during the year", answer: 11 },
-    { code: "§135", section: "C", text: "Number of CSR projects ongoing at year end", answer: 4 },
-  ],
-  "ds-20": [
-    { code: "§135(5)", section: "C", text: "CSR obligation for the year (2% of average net profit)", answer: 168, unit: "₹ lakh" },
-    { code: "§135(5)", section: "C", text: "Actual amount spent on CSR during the year", answer: 176, unit: "₹ lakh" },
-  ],
-  "ds-21": [
-    { code: "Rule 8(3)", section: "C", text: "Number of projects covered by Social Impact Assessment", answer: 6 },
-    { code: "Rule 8(3)", section: "C", text: "Average impact assessment score (out of 10)", answer: 8 },
-  ],
   // Report 5 — ESG Data Book Q1
   "ds-22": [
     { code: "ESG-E1", section: "C", text: "Total energy consumed in Q1", answer: 36900, unit: "GJ" },
