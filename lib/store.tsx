@@ -191,10 +191,25 @@ function reducer(state: State, action: Action): State {
 
     case "CREATE_REPORT": {
       const { report, sources } = createReportInstance(action.name.trim() || "Untitled Report", state.tick);
+      // No day-advancing anymore — collect immediately: mark submitted and run the
+      // pipeline so the new report is populated (any flag is resolvable in Review).
+      const newEvents: AgentEvent[] = [];
+      const processed = sources.map((src) => {
+        newEvents.push(
+          makeEvent(src.reportId, src.id, "submitted", `"${src.name}" received and logged — queued for extraction.`, state.tick, "Collection Agent")
+        );
+        const { src: p, events: e } = runSourcePipeline({ ...src, status: "submitted", submittedAtTick: state.tick }, state.tick);
+        newEvents.push(...e);
+        return p;
+      });
+      const nextSources = [...state.sources, ...processed];
+      const { reports: nextReports, events: e2 } = checkReportGeneration([...state.reports, report], nextSources, state.tick);
+      newEvents.push(...e2);
       return {
         ...state,
-        reports: [...state.reports, report],
-        sources: [...state.sources, ...sources],
+        reports: nextReports,
+        sources: nextSources,
+        events: [...state.events, ...newEvents],
         openReportIds: [...state.openReportIds, report.id],
         activeReportId: report.id,
       };

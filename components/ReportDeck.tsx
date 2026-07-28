@@ -206,7 +206,7 @@ export function ReportDeck() {
             </p>
           )}
           <p className="text-[10px] text-slate-400 mt-1 truncate">
-            {lastEvent ? `Day ${lastEvent.timestamp}: ${lastEvent.message}` : `Scheduled — advance the day to start collection.`}
+            {lastEvent ? `Day ${lastEvent.timestamp}: ${lastEvent.message}` : `Awaiting first collection activity.`}
           </p>
         </div>
       </div>

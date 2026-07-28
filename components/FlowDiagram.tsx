@@ -612,7 +612,7 @@ function AgentSettings({
           <SettingLabel text="Recent activity — this agent" />
           <div className="mt-2 flex flex-col gap-1">
             {recent.length === 0 ? (
-              <p className="text-[11px] text-slate-400 italic">No activity yet — advance the simulation to see this agent work.</p>
+              <p className="text-[11px] text-slate-400 italic">No activity recorded for this agent on this report.</p>
             ) : (
               recent.map((e) => (
                 <div key={e.id} className="flex items-start gap-2 text-[11px]">
