@@ -56,12 +56,12 @@ export function departmentReport(department: string, qa: BrsrQuestion[]): string
       ];
     case "Sustainability":
       return [
-        `Under Principle 6, the entity disclosed Scope 1 emissions of ${v("P6 Q1")} and Scope 2 emissions of ${v("P6 Q2")}, giving an emission intensity of ${v("P6 Q3")}.`,
-        `Total water withdrawal stood at ${v("P6 Q7")} with ${v("P6 Q9")} discharged after treatment, and the entity generated ${v("P6 Q11")}, reflecting continued efforts to protect and restore the environment.`,
+        `Under Principle 6, the entity disclosed its Scope 1 and Scope 2 GHG emissions and intensity with a year-on-year comparison (indicator P6 Q1), alongside total water withdrawal, consumption and discharge (indicator P6 Q7).`,
+        `During the year the entity generated ${v("P6 Q11")}, reflecting continued efforts to protect and restore the environment and to improve resource efficiency against the prior year.`,
       ];
     case "HR":
       return [
-        `As on the reporting date, ${ENTITY} employed ${v("A.20")} people, of whom ${v("P3 Q1")} were women, with ${v("P3 Q2")} of employees covered by health and accident insurance under Principle 3.`,
+        `As on the reporting date, the workforce of ${ENTITY} comprised permanent and contractual employees and workers across genders, disaggregated in indicator A.20, of whom ${v("P3 Q1")} were women. Well-being measures — health, accident and parental benefits — covered the workforce as set out under Principle 3 (indicator P3 Q3).`,
         `Skill-upgradation training reached ${v("P3 Q6")} of employees. In respect of human rights (Principle 5), the entity recorded ${v("P5 Q7")} under the POSH framework and confirmed that ${v("P5 Q3")} of its workforce was paid more than the applicable minimum wage.`,
       ];
     case "CSR":

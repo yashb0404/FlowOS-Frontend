@@ -8,6 +8,26 @@ import { buildFullReportHtml, printHtml } from "@/lib/fullReport";
 import { downloadFullWorkbook } from "@/lib/sheetExport";
 import { BrsrQuestion, DataSource } from "@/lib/types";
 
+/** FY26 vs FY25 delta chip for a scalar indicator. */
+function YoY({ cur, prev, unit }: { cur: string | number; prev: string | number; unit?: string }) {
+  const c = Number(cur);
+  const p = Number(prev);
+  const numeric = !Number.isNaN(c) && !Number.isNaN(p) && p !== 0;
+  const pct = numeric ? ((c - p) / p) * 100 : 0;
+  const arrow = numeric ? (pct > 0.05 ? "▲" : pct < -0.05 ? "▼" : "▬") : "";
+  return (
+    <span className="text-[10px] text-slate-400">
+      FY25: {typeof prev === "number" ? prev.toLocaleString() : prev}
+      {unit ? ` ${unit}` : ""}
+      {numeric && (
+        <span className={`ml-1 font-semibold ${pct > 0.05 ? "text-[#3d5a99]" : pct < -0.05 ? "text-rose-500" : "text-slate-400"}`}>
+          {arrow} {Math.abs(pct).toFixed(1)}%
+        </span>
+      )}
+    </span>
+  );
+}
+
 /** Build the Q&A list for a department — real questions, or a fallback from its KPI fields. */
 function qaFor(src: DataSource): BrsrQuestion[] {
   const real = questionsForSource(src);
@@ -108,17 +128,46 @@ export function BrsrDocument({ reportId }: { reportId: string }) {
                   <p className="text-[12.5px] text-slate-700 leading-snug">
                     <span className="font-semibold text-slate-500">Q.</span> {q.text}
                   </p>
-                  <div className="mt-1.5 flex items-baseline gap-2">
-                    <span className="text-[11px] font-semibold text-emerald-700">A.</span>
-                    {answered ? (
-                      <span className="text-[13px] font-bold text-slate-900 tabular-nums">
-                        {typeof q.answer === "number" ? q.answer.toLocaleString() : q.answer}
-                        {q.unit && <span className="text-[10.5px] font-medium text-slate-400 ml-1">{q.unit}</span>}
-                      </span>
+                  {answered ? (
+                    q.table ? (
+                      <div className="mt-2 overflow-x-auto">
+                        <table className="text-[11px] border-collapse">
+                          <thead>
+                            <tr className="bg-slate-50 text-slate-500">
+                              {q.table.columns.map((c) => (
+                                <th key={c} className="border border-slate-200 px-2.5 py-1 text-left font-semibold whitespace-nowrap">{c}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {q.table.rows.map((row, ri) => (
+                              <tr key={ri}>
+                                {row.map((cell, ci) => (
+                                  <td key={ci} className={`border border-slate-200 px-2.5 py-1 ${ci === 0 ? "text-slate-700 font-medium" : "text-slate-600 tabular-nums text-right"}`}>
+                                    {typeof cell === "number" ? cell.toLocaleString() : cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     ) : (
+                      <div className="mt-1.5 flex items-baseline gap-2 flex-wrap">
+                        <span className="text-[11px] font-semibold text-emerald-700">A.</span>
+                        <span className="text-[13px] font-bold text-slate-900 tabular-nums">
+                          {typeof q.answer === "number" ? q.answer.toLocaleString() : q.answer}
+                          {q.unit && <span className="text-[10.5px] font-medium text-slate-400 ml-1">{q.unit}</span>}
+                        </span>
+                        {q.prev !== undefined && <YoY cur={q.answer} prev={q.prev} unit={q.unit} />}
+                      </div>
+                    )
+                  ) : (
+                    <div className="mt-1.5 flex items-baseline gap-2">
+                      <span className="text-[11px] font-semibold text-emerald-700">A.</span>
                       <span className="text-[12px] italic text-slate-300">awaiting submission…</span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
                 <span className="text-[9px] text-slate-300 shrink-0">Sec {q.section}</span>
               </div>

@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useStore } from "@/lib/store";
 
-type Panel = "integrations" | "rbac" | "secrets" | "audit";
+type Panel = "integrations" | "rbac" | "secrets";
 
 const PANELS: { key: Panel; icon: string; label: string; desc: string }[] = [
   { key: "integrations", icon: "⚙", label: "Integrations Matrix", desc: "ERP, email & Teams connectors" },
   { key: "rbac", icon: "👥", label: "Role-Based Access Controls", desc: "Personnel roles & scopes" },
   { key: "secrets", icon: "🗝", label: "Developer API Secrets", desc: "Tokens & webhook endpoints" },
-  { key: "audit", icon: "▤", label: "Security Audit Log", desc: "Tamper-evident action ledger" },
 ];
 
 const PERSONNEL = [
@@ -61,7 +59,6 @@ export function AdminPanel() {
         {panel === "integrations" && <Integrations />}
         {panel === "rbac" && <Rbac />}
         {panel === "secrets" && <Secrets />}
-        {panel === "audit" && <AuditLog />}
       </div>
     </div>
   );
@@ -195,70 +192,6 @@ function Secrets() {
       </div>
       <p className="text-[10.5px] text-slate-400 mt-4">
         Keys shown are demo placeholders. Production keys live in a vault and rotate automatically.
-      </p>
-    </div>
-  );
-}
-
-function AuditLog() {
-  const { events, tick } = useStore();
-
-  const entries = [...events]
-    .reverse()
-    .filter((e) =>
-      ["flag_resolved", "human_alert", "report_signed", "report_generated", "submitted"].includes(e.kind)
-    )
-    .map((e) => {
-      const sev =
-        e.kind === "flag_resolved" || e.kind === "report_signed"
-          ? { label: "HIGH", cls: "bg-rose-50 text-rose-600 border-rose-200" }
-          : e.kind === "human_alert" || e.kind === "report_generated"
-            ? { label: "MEDIUM", cls: "bg-amber-50 text-amber-700 border-amber-200" }
-            : { label: "LOW", cls: "bg-slate-100 text-slate-500 border-slate-200" };
-      const who = e.actor === "Human Reviewer" ? "sarah.jenkins@globalmfg.co" : e.actor;
-      return { id: e.id, sev, who, msg: e.message, day: e.timestamp };
-    });
-
-  return (
-    <div className="glass rounded-2xl p-6 fade-up">
-      <div className="flex items-start justify-between gap-4">
-        <PanelHeader
-          title="Enterprise Security Log Ledger"
-          desc="Chronological, tamper-evident record of every override, alert, signature and release — generated live from this session's pipeline."
-        />
-        <span className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-slate-900 text-emerald-300 font-mono">
-          AUDIT NODE ACTIVE
-        </span>
-      </div>
-
-      {entries.length === 0 ? (
-        <div className="glass-soft rounded-xl px-4 py-6 mt-5 text-center text-[12px] text-slate-500">
-          No auditable actions yet — advance the simulation and resolve a flag to see entries appear here.
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2.5 mt-5">
-          {entries.map((en) => (
-            <div key={en.id} className="glass-soft rounded-xl px-4 py-3 flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3 min-w-0">
-                <span className={`shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-md border mt-0.5 ${en.sev.cls}`}>
-                  {en.sev.label}
-                </span>
-                <div className="min-w-0">
-                  <div className="text-[12px] font-semibold text-slate-700 font-mono truncate">{en.who}</div>
-                  <div className="text-[12px] text-slate-500 mt-0.5 leading-snug">{en.msg}</div>
-                </div>
-              </div>
-              <div className="shrink-0 text-right text-[10px] text-slate-400 font-mono">
-                Day {en.day}
-                <br />
-                IP: 192.168.12.98
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      <p className="text-[10.5px] text-slate-400 mt-4">
-        Current simulation day: {tick}. In production every entry is SHA-256 hash-chained for tamper evidence.
       </p>
     </div>
   );

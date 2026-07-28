@@ -31,13 +31,25 @@ export interface Flag {
   resolvedValue?: number | string;
 }
 
+/** A tabular answer — column headers + rows, mirroring the multi-column BRSR tables. */
+export interface BrsrTable {
+  columns: string[];
+  rows: (string | number)[][];
+}
+
 /** One BRSR disclosure question and its answer, as it appears in a department's sheet. */
 export interface BrsrQuestion {
   code: string; // BRSR reference, e.g. "P6 Q7" or "A.11"
   section: "A" | "B" | "C"; // General / Management & Process / Principle-wise
   text: string; // the question exactly as asked in the BRSR format
-  answer: string | number; // the value the department reports
+  answer: string | number; // the value the department reports (scalar indicators)
   unit?: string;
+  /** Prior-year (FY25) value for a year-on-year comparison on scalar indicators. */
+  prev?: string | number;
+  /** Tabular indicators carry a table instead of (or alongside) a scalar answer. */
+  table?: BrsrTable;
+  /** Optional "if yes, provide details" narrative. */
+  note?: string;
 }
 
 export interface DataSource {
