@@ -204,23 +204,22 @@ export function buildFullReportHtml(report: Report, sources: DataSource[]): stri
     body { font-family: Georgia, 'Times New Roman', serif; color: #1a202c; font-size: 12px; line-height: 1.55; }
     .cover { height: 90vh; display: flex; flex-direction: column; justify-content: center; text-align: center; page-break-after: always; }
     .cover .kicker { text-transform: uppercase; letter-spacing: 3px; font-size: 11px; color: #64748b; }
-    .cover h1 { font-size: 30px; margin: 14px 0 8px; line-height: 1.2; }
+    .cover h1 { font-size: 30px; margin: 14px 0 8px; line-height: 1.2; color: #1F4E79; }
     .cover .sub { font-size: 13px; color: #475569; }
     .cover .reg { margin-top: 22px; font-size: 11px; color: #64748b; }
-    .cover .badge { margin-top: 26px; font-size: 11px; color: #3d5a99; border: 1px solid #c3cbe8; background: #f4f6fc; display: inline-block; padding: 6px 14px; border-radius: 6px; }
-    h2 { font-size: 15px; color: #1a202c; border-bottom: 2px solid #1a202c; padding-bottom: 4px; margin: 26px 0 4px; page-break-after: avoid; }
-    h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #3d5a99; margin: 16px 0 6px; page-break-after: avoid; }
-    .p-head { font-size: 13px; color: #1a202c; letter-spacing: 0; text-transform: none; margin: 20px 0 2px; }
+    .cover .badge { margin-top: 26px; font-size: 11px; color: #1F4E79; border: 1px solid #b8cbe0; background: #eef4fb; display: inline-block; padding: 6px 14px; border-radius: 6px; }
+    h2 { font-size: 15px; color: #1F4E79; background: #eaeef2; padding: 7px 10px; margin: 26px 0 6px; page-break-after: avoid; }
+    h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #2E74B5; margin: 16px 0 6px; page-break-after: avoid; }
+    .p-head { font-size: 13px; color: #1F4E79; letter-spacing: 0; text-transform: none; margin: 20px 0 2px; }
     .p-title { font-size: 11px; font-style: italic; color: #64748b; margin: 0 0 8px; }
     .principle { page-break-inside: avoid; }
     .toc { page-break-after: always; }
-    .toc h2 { border: none; }
     table { width: 100%; border-collapse: collapse; }
     .contents td { padding: 7px 6px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
-    .contents .c-no { width: 30px; color: #94a3b8; font-weight: bold; }
+    .contents .c-no { width: 30px; color: #2E74B5; font-weight: bold; }
     .contents .c-sub { color: #94a3b8; font-weight: normal; padding-left: 22px; font-size: 11px; }
-    .contents .c-dept { font-weight: bold; }
-    .contents .c-dept.c-sub { font-weight: normal; }
+    .contents .c-dept { font-weight: bold; color: #1F4E79; }
+    .contents .c-dept.c-sub { font-weight: normal; color: #475569; }
     .contents .c-owner { font-weight: normal; color: #64748b; }
     .contents .c-sec { color: #64748b; }
     .contents .c-stat { text-align: right; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -228,15 +227,19 @@ export function buildFullReportHtml(report: Report, sources: DataSource[]): stri
     .dept { page-break-inside: avoid; }
     .dept-meta { color: #64748b; font-size: 10.5px; margin: 2px 0 4px; }
     table.qa { margin-bottom: 8px; }
-    table.qa th { background: #f1f5f9; text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #475569; padding: 5px 8px; border: 1px solid #d7dde6; }
-    table.qa td { border: 1px solid #e2e8f0; padding: 5px 8px; vertical-align: top; }
+    table.qa th { background: #8C96A0; text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #ffffff; padding: 5px 8px; border: 1px solid #7c8794; }
+    table.qa td { border: 1px solid #d7dde6; padding: 5px 8px; vertical-align: top; }
+    table.qa tbody tr:nth-child(even) td { background: #f5f8fb; }
     .q-code { width: 66px; color: #64748b; font-size: 10px; }
+    .q-text { color: #1a202c; }
     .q-ans { width: 150px; text-align: right; font-variant-numeric: tabular-nums; }
-    .q-ans .cur { font-weight: bold; display: block; }
+    .q-ans .cur { font-weight: bold; display: block; color: #2E74B5; }
     .q-ans .prev { display: block; font-size: 9px; font-weight: normal; color: #94a3b8; margin-top: 1px; }
+    .q-owner { color: #64748b; }
     table.mini { width: auto; margin: 6px 0 2px; border-collapse: collapse; }
-    table.mini th { background: #eef2f9; border: 1px solid #cbd5e1; padding: 3px 8px; font-size: 9px; text-transform: none; letter-spacing: 0; color: #334155; text-align: left; }
-    table.mini td { border: 1px solid #d7dde6; padding: 3px 8px; font-size: 9.5px; }
+    table.mini th { background: #dbe5f0; border: 1px solid #b8cbe0; padding: 3px 8px; font-size: 9px; text-transform: none; letter-spacing: 0; color: #1F4E79; text-align: left; font-weight: bold; }
+    table.mini td { border: 1px solid #cdd8e4; padding: 3px 8px; font-size: 9.5px; }
+    table.mini td.num { color: #2E74B5; font-weight: bold; }
     table.mini td.num { text-align: right; font-variant-numeric: tabular-nums; }
     .q-owner { width: 96px; color: #64748b; font-size: 10px; }
     .narr p { margin: 0 0 8px; }

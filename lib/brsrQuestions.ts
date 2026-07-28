@@ -29,6 +29,10 @@ export const BRSR_QUESTIONS: Record<string, BrsrQuestion[]> = {
     },
     { code: "P1 Q7", section: "C", text: "Number of complaints on conflict of interest received during the year", answer: 0, prev: 0 },
     { code: "P1 Q3", section: "C", text: "Coverage of anti-corruption / anti-bribery policy awareness training", answer: 100, unit: "%", prev: 96 },
+    { code: "P4 Q1", section: "C", text: "Number of stakeholder groups identified and formally engaged during the year", answer: 6, prev: 5 },
+    { code: "P4 Q2", section: "C", text: "Frequency of stakeholder consultation reviewed by the Board", answer: "Quarterly" },
+    { code: "P7 Q1", section: "C", text: "Number of trade and industry chambers / associations the entity is a member of", answer: 4, prev: 4 },
+    { code: "P7 Q2", section: "C", text: "Does the entity have a Board-approved policy on responsible / transparent advocacy?", answer: "Yes" },
   ],
   Finance: [
     { code: "A.11", section: "A", text: "Paid-up capital of the entity", answer: 215.46, unit: "₹ Cr" },
