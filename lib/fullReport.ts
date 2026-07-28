@@ -24,17 +24,51 @@ interface Row {
   submitted: boolean;
 }
 
-const qaTable = (rows: Row[], ownerCol: boolean) =>
-  `<table class="qa"><thead><tr><th>Ref</th><th>Disclosure</th><th>Response</th>${ownerCol ? "<th>Data owner</th>" : ""}</tr></thead><tbody>${rows
-    .map(
-      (r) => `<tr>
+/** Nested table for a tabular indicator. */
+function miniTable(t: { columns: string[]; rows: (string | number)[][] }): string {
+  return `<table class="mini"><thead><tr>${t.columns
+    .map((c) => `<th>${esc(c)}</th>`)
+    .join("")}</tr></thead><tbody>${t.rows
+    .map((row) => `<tr>${row.map((cell, ci) => `<td class="${ci === 0 ? "" : "num"}">${typeof cell === "number" ? cell.toLocaleString() : esc(String(cell))}</td>`).join("")}</tr>`)
+    .join("")}</tbody></table>`;
+}
+
+/** FY26 response cell with an inline FY25 comparison for scalar indicators. */
+function responseScalar(q: BrsrQuestion): string {
+  let out = `<span class="cur">${fmtVal(q.answer, q.unit)}</span>`;
+  if (q.prev !== undefined) {
+    const c = Number(q.answer);
+    const p = Number(q.prev);
+    let delta = "";
+    if (!Number.isNaN(c) && !Number.isNaN(p) && p !== 0) {
+      const pct = ((c - p) / p) * 100;
+      delta = ` ${pct > 0.05 ? "▲" : pct < -0.05 ? "▼" : "▬"} ${Math.abs(pct).toFixed(1)}%`;
+    }
+    out += `<span class="prev">FY25: ${fmtVal(q.prev, q.unit)}${delta}</span>`;
+  }
+  return out;
+}
+
+const qaTable = (rows: Row[], ownerCol: boolean) => {
+  const cols = ownerCol ? 4 : 3;
+  const body = rows
+    .map((r) => {
+      if (r.submitted && r.q.table) {
+        return `<tr>
+          <td class="q-code">${esc(r.q.code)}</td>
+          <td class="q-text" colspan="${cols - 1}">${esc(r.q.text)}${miniTable(r.q.table)}</td>
+        </tr>`;
+      }
+      return `<tr>
         <td class="q-code">${esc(r.q.code)}</td>
         <td class="q-text">${esc(r.q.text)}</td>
-        <td class="q-ans">${r.submitted ? fmtVal(r.q.answer, r.q.unit) : "<span class='await'>awaiting</span>"}</td>
+        <td class="q-ans">${r.submitted ? responseScalar(r.q) : "<span class='await'>awaiting</span>"}</td>
         ${ownerCol ? `<td class="q-owner">${esc(r.owner)}</td>` : ""}
-      </tr>`
-    )
-    .join("")}</tbody></table>`;
+      </tr>`;
+    })
+    .join("");
+  return `<table class="qa"><thead><tr><th>Ref</th><th>Disclosure</th><th>Response</th>${ownerCol ? "<th>Data owner</th>" : ""}</tr></thead><tbody>${body}</tbody></table>`;
+};
 
 /** BRSR-format body: Section A (general) → Section B (management & process) → Section C (Principle 1–9). */
 function brsrFormatBody(repSources: DataSource[]): { contents: string; sections: string } {
@@ -183,7 +217,13 @@ export function buildFullReportHtml(report: Report, sources: DataSource[]): stri
     table.qa th { background: #f1f5f9; text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #475569; padding: 5px 8px; border: 1px solid #d7dde6; }
     table.qa td { border: 1px solid #e2e8f0; padding: 5px 8px; vertical-align: top; }
     .q-code { width: 66px; color: #64748b; font-size: 10px; }
-    .q-ans { width: 120px; text-align: right; font-weight: bold; font-variant-numeric: tabular-nums; }
+    .q-ans { width: 150px; text-align: right; font-variant-numeric: tabular-nums; }
+    .q-ans .cur { font-weight: bold; display: block; }
+    .q-ans .prev { display: block; font-size: 9px; font-weight: normal; color: #94a3b8; margin-top: 1px; }
+    table.mini { width: auto; margin: 6px 0 2px; border-collapse: collapse; }
+    table.mini th { background: #eef2f9; border: 1px solid #cbd5e1; padding: 3px 8px; font-size: 9px; text-transform: none; letter-spacing: 0; color: #334155; text-align: left; }
+    table.mini td { border: 1px solid #d7dde6; padding: 3px 8px; font-size: 9.5px; }
+    table.mini td.num { text-align: right; font-variant-numeric: tabular-nums; }
     .q-owner { width: 96px; color: #64748b; font-size: 10px; }
     .narr p { margin: 0 0 8px; }
     .await { color: #b45309; font-style: italic; }

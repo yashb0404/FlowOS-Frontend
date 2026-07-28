@@ -31,9 +31,9 @@ async function save(wb: ExcelJS.Workbook, filename: string) {
 function layoutQaSheet(
   ws: ExcelJS.Worksheet,
   titleLines: { text: string; strong?: boolean; brand?: boolean; italic?: boolean }[],
-  rows: (string | number)[][]
+  src: DataSource
 ) {
-  ws.columns = [{ width: 12 }, { width: 62 }, { width: 18 }, { width: 12 }, { width: 34 }];
+  ws.columns = [{ width: 12 }, { width: 60 }, { width: 20 }, { width: 18 }, { width: 32 }];
 
   titleLines.forEach((t, i) => {
     const r = ws.addRow([t.text]);
@@ -48,7 +48,7 @@ function layoutQaSheet(
   });
   ws.addRow([]);
 
-  const head = ws.addRow(["Ref", "BRSR Question", "FY26 Response", "Unit", "Evidence Required"]);
+  const head = ws.addRow(["Ref", "BRSR Question", "FY26 Response", "FY25 (prev.)", "Evidence Required"]);
   head.eachCell((c) => {
     c.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10.5 };
     c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY } };
@@ -57,25 +57,55 @@ function layoutQaSheet(
   });
   head.height = 20;
 
-  rows.forEach((row, i) => {
-    const r = ws.addRow(row);
-    r.eachCell((c, col) => {
-      c.border = allBorders;
-      c.alignment = { vertical: "top", wrapText: col === 2, horizontal: col === 3 ? "right" : "left" };
-      c.font = { size: 10.5, color: { argb: col === 3 ? INK : col === 1 || col === 5 ? GREY : INK }, bold: col === 3 };
-      if (col === 1) c.font = { size: 9.5, color: { argb: GREY } };
-      if (i % 2 === 1) c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY_SOFT } };
-    });
-  });
-}
-
-/** Rows (Ref · Question · Response · Unit · Evidence) for one source. */
-function questionRows(src: DataSource): (string | number)[][] {
   const filled = src.status === "submitted";
   const qa = questionsForSource(src);
-  return qa.length
-    ? qa.map((q, i) => [q.code, q.text, filled ? q.answer : "—", q.unit ?? "", src.evidence?.[i] ?? src.evidence?.[0] ?? ""])
-    : src.expectedFields.map((f, i) => [`Q${i + 1}`, label(f), filled ? (src.submittedFields?.[f] ?? "—") : "—", "", src.evidence?.[i] ?? src.evidence?.[0] ?? ""]);
+  const resp = (a: string | number, unit?: string) => `${typeof a === "number" ? a.toLocaleString() : a}${unit ? " " + unit : ""}`;
+  let band = 0;
+
+  const scalarRow = (code: string, text: string, response: string, prev: string, evidence: string) => {
+    const r = ws.addRow([code, text, response, prev, evidence]);
+    r.eachCell((c, col) => {
+      c.border = allBorders;
+      c.alignment = { vertical: "top", wrapText: col === 2, horizontal: col === 3 || col === 4 ? "right" : "left" };
+      c.font = { size: col === 1 ? 9.5 : 10.5, color: { argb: col === 1 || col === 5 ? GREY : col === 4 ? GREY : INK }, bold: col === 3 };
+      if (band % 2 === 1) c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY_SOFT } };
+    });
+    band++;
+  };
+
+  const items = qa.length ? qa : src.expectedFields.map((f, i) => ({ code: `Q${i + 1}`, text: label(f), answer: filled ? (src.submittedFields?.[f] ?? "—") : "—", unit: undefined, prev: undefined, table: undefined } as (typeof qa)[number]));
+
+  items.forEach((q, i) => {
+    const evidence = src.evidence?.[i] ?? src.evidence?.[0] ?? "";
+    if (filled && q.table) {
+      const lbl = ws.addRow([q.code, q.text, "", "", evidence]);
+      lbl.eachCell((c, col) => {
+        c.border = allBorders;
+        c.alignment = { vertical: "top", wrapText: col === 2, horizontal: "left" };
+        c.font = { size: col === 1 ? 9.5 : 10.5, bold: col === 2, color: { argb: col === 1 || col === 5 ? GREY : INK } };
+      });
+      const th = ws.addRow(["", ...q.table.columns]);
+      th.eachCell((c, col) => {
+        if (col === 1) return;
+        c.border = allBorders;
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFEEF2F9" } };
+        c.font = { size: 9.5, bold: true, color: { argb: "FF334155" } };
+        c.alignment = { horizontal: col === 2 ? "left" : "right" };
+      });
+      q.table.rows.forEach((tr) => {
+        const dr = ws.addRow(["", ...tr.map((v) => (typeof v === "number" ? v : v))]);
+        dr.eachCell((c, col) => {
+          if (col === 1) return;
+          c.border = allBorders;
+          c.font = { size: 9.5, color: { argb: INK }, bold: col === 2 };
+          c.alignment = { horizontal: col === 2 ? "left" : "right" };
+        });
+      });
+      band++;
+    } else {
+      scalarRow(q.code, q.text, filled ? resp(q.answer, q.unit) : "—", filled && q.prev !== undefined ? resp(q.prev, q.unit) : "", evidence);
+    }
+  });
 }
 
 /** Download a single department's sheet as a styled .xlsx. */
@@ -91,7 +121,7 @@ export async function downloadSheet(src: DataSource, repName: string) {
       { text: `Data sheet: ${src.department}   ·   SPOC: ${src.owner}` },
       { text: `Status: ${filled ? "Submitted" : "Awaiting submission"}   ·   Reporting period: FY26 (Apr'25 – Mar'26)`, italic: true },
     ],
-    questionRows(src)
+    src
   );
   await save(wb, `BRSR - FY26 - AREPL - ${src.department}${filled ? "" : " - TEMPLATE"}.xlsx`);
 }
@@ -211,7 +241,7 @@ export async function downloadFullWorkbook(report: Report, sources: DataSource[]
         { text: `SPOC: ${s.owner}   ·   ${s.principle ?? "Disclosure"}` },
         { text: `Status: ${s.status === "submitted" ? "Submitted" : "Awaiting submission"}`, italic: true },
       ],
-      questionRows(s)
+      s
     );
   });
 
